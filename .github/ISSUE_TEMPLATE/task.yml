@@ -1,0 +1,36 @@
+name: Task
+description: A piece of work. Every task gets a plan file in plans/.
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What this delivers, and which rubric line it earns marks on.
+    validations:
+      required: true
+  - type: dropdown
+    id: workstream
+    attributes:
+      label: Workstream
+      description: Also add the matching `ws:` label.
+      options: [product, requirements-ux, architecture, backend, intelligence, frontend, quality, scrum, paper, presentation, brand, knowledge]
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Checks someone else can verify without asking you.
+      value: "- [ ] "
+    validations:
+      required: true
+  - type: input
+    id: depends
+    attributes:
+      label: Depends on
+      description: Issue numbers this truly can't start without (e.g. "#7"), or "none". If a mock or stub would do, it isn't a dependency.
+      value: none
+  - type: markdown
+    attributes:
+      value: |
+        After creating the issue, add `plans/<issue number>-<slug>.md` from [the template](../blob/main/plans/TEMPLATE.md) and run `python3 scripts/index.py`.
