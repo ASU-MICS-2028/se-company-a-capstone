@@ -2,8 +2,8 @@
 issue: 1
 title: Choose the product and submit the concept note
 workstream: product
-owner: unassigned
-status: todo
+owner: Joseph Etse
+status: in-progress
 milestone: M1 Proposal
 depends_on: none
 ---
@@ -18,7 +18,7 @@ Pick the one problem and intelligent system we will build, and get the instructo
 
 ## Done when
 
-- [ ] Three to five candidate ideas compared in one table: problem, users, the intelligent part, data available, 6-week feasibility
+- [x] Three to five candidate ideas compared in one table: problem, users, the intelligent part, data available, 6-week feasibility
 - [ ] Team vote recorded in `decisions/`
 - [ ] Concept note submitted, and the instructor's feedback copied into the issue
 
@@ -41,3 +41,4 @@ Pick the one problem and intelligent system we will build, and get the instructo
 ## Log
 
 - 2026-11-14: Plan created with the repository setup.
+- 2026-11-15: Five concepts with full proposal drafts and a comparison in `docs/proposal/drafts/`. Vote board shared with the team. Recommendation: Twɛn, fallback Kanea.

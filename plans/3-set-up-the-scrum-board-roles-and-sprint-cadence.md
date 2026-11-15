@@ -41,3 +41,4 @@ Run the project as Scrum from day one, so the evidence for Scrum Project Managem
 ## Log
 
 - 2026-11-14: Plan created with the repository setup.
+- 2026-11-15: GitHub Project created at https://github.com/orgs/ASU-MICS-2028/projects/1 with #1–#18 added. Add a Board view in the web UI (gh cannot create views).
