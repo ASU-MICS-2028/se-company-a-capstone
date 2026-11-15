@@ -2,8 +2,8 @@
 issue: 4
 title: Redraw the Nyansapo Systems logo from the authentic glyph
 workstream: brand
-owner: unassigned
-status: todo
+owner: Joseph Etse
+status: done
 milestone: M2 Core demo
 depends_on: none
 ---
@@ -18,10 +18,10 @@ Turn the concept-board sketch into a proper logo for the slides, the repo and th
 
 ## Done when
 
-- [ ] SVG files: full lockup, mark only, one-colour, reversed (on maroon)
-- [ ] PNG exports at 512 and 32 px
-- [ ] Mark redrawn from a reference image of the authentic Nyansapo glyph, with the source cited
-- [ ] Files in `docs/brand/`, with a short usage note
+- [x] SVG files: full lockup, mark only, one-colour, reversed (on maroon)
+- [x] PNG exports at 512 and 32 px
+- [x] Mark redrawn from a reference image of the authentic Nyansapo glyph, with the source cited
+- [x] Files in `docs/brand/`, with a short usage note
 
 ## Inputs and outputs
 
@@ -41,3 +41,4 @@ Turn the concept-board sketch into a proper logo for the slides, the repo and th
 ## Log
 
 - 2026-11-14: Plan created with the repository setup.
+- 2026-11-15: Direction C chosen by Joseph. Final SVG and PNG exports, the glyph source and a usage note are in `docs/brand/`.

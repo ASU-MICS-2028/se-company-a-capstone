@@ -1,3 +1,5 @@
+<p><img src="docs/brand/logo.svg" alt="Nyansapo Systems" width="360"></p>
+
 # Nyansapo Systems
 
 **ICS 530 Software Engineering Essentials capstone · Ashesi University · 09 Nov – 18 Dec 2026**
