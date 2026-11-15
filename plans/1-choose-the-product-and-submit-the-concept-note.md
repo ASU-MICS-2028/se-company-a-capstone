@@ -43,3 +43,4 @@ Pick the one problem and intelligent system we will build, and get the instructo
 - 2026-11-14: Plan created with the repository setup.
 - 2026-11-15: Five concepts with full proposal drafts and a comparison in `docs/proposal/drafts/`. Vote board shared with the team. Recommendation: Twɛn, fallback Kanea.
 - 2026-11-15: Team vote: Twɛn 5 of 6. Recorded in `decisions/2026-11-15-product-choice-twen.md`. Next: concept note.
+- 2026-11-15: Proposal submitted at 19:23 (4 pages, with an architecture diagram and citations checked). Waiting for instructor feedback and approval before implementation.
