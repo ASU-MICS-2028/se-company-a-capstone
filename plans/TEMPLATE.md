@@ -39,4 +39,4 @@ Keep "status" in step with the issue's labels. When the issue closes, set status
 
 ## Log
 
-<!-- Dated one-liners as work happens. The details go in changes/, decisions/ and learnings/; link them here. -->
+<!-- Owner only: milestones as dated one-liners. Day-to-day progress goes in issue comments, which never conflict. -->

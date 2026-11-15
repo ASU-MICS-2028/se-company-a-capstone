@@ -19,7 +19,17 @@ Each of us owns a part, and the rest of the team relies on what you write about 
 
 **One idea per file.** If a file needs two headings for two ideas, it should be two files that link to each other with relative markdown links: `[Idempotency keys](idempotency-keys.md)`. Those links work on GitHub and in Obsidian, so you can open the repo as an Obsidian vault.
 
-**Each folder's `index.md` is generated.** Never edit it by hand. Run `python3 scripts/index.py` after adding files. If git reports a conflict in an `index.md`, take either side and rerun the script.
+## No merge conflicts: never edit a file someone else might be editing
+
+Every file has one writer at a time. That way two PRs can't touch the same file, so they can't conflict.
+
+- **Add new files; don't edit shared ones.** Every change, decision, learning and note is a new file of its own.
+- **Never commit an `index.md`.** A bot rebuilds every index on `main` after each merge, and CI rejects any PR that edits one. If you ran the script locally, undo it with `git checkout origin/main -- '*/index.md'`.
+- **Only edit your own issue's plan.** For anyone else's work, comment on their issue instead. Comments can't conflict.
+- **Progress notes go in issue comments.** The plan's `Log` is for milestones only, and only the owner writes it.
+- **Long documents are one file per section.** For example, `docs/proposal/sections/03-proposed-system.md` or `paper/sections/intro.tex`. Each section has one owner, and we join them when we export.
+- **Root files** (`README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `.github/`) change only in a small PR of their own, merged the same day.
+- **Branch from a fresh `main`, and keep PRs small and short-lived.**
 
 ## The flow
 
@@ -31,8 +41,8 @@ Each of us owns a part, and the rest of the team relies on what you write about 
    - a `changes/` file: what changed, who was in charge, who helped, and **exactly how AI was used** (or "None.")
    - a `decisions/` file for each decision you made
    - `learnings/` notes for anything the team should remember
-   - updates to the plan's `Done when` boxes and `Log`
-   - regenerated indexes: `python3 scripts/index.py`
+   - your own plan's `Done when` boxes ticked (progress notes go in the issue)
+   - no `index.md` files: the bot rebuilds them after the merge
 6. **Open a PR** that says `Closes #<issue>`. One teammate reviews, then we squash-merge.
 7. When the issue closes, set the plan's `status: done`.
 

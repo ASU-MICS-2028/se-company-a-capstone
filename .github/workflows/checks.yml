@@ -6,14 +6,27 @@ on:
 permissions:
   contents: read
 jobs:
-  indexes-and-tests:
+  front-matter-and-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Indexes are up to date and every file has valid front matter
+      - name: Every file has valid front matter
         run: python3 scripts/index.py --check
       - name: Unit tests
         run: python3 -m unittest discover -s tests
+      - name: PR does not edit a generated index (the bot rebuilds them on main)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          touched=$(git diff --name-only "$BASE_SHA"...HEAD | grep -E '(^|/)index\.md$' || true)
+          if [ -n "$touched" ]; then
+            echo "Remove these from your PR (run: git checkout origin/main -- <file>):"
+            echo "$touched"
+            exit 1
+          fi

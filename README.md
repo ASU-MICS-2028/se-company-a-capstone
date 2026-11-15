@@ -60,6 +60,6 @@ The full flow is in [CONTRIBUTING.md](CONTRIBUTING.md). Coding assistants follow
 | [`knowledge/`](knowledge/index.md) | Course knowledge, one idea per file |
 | [`learnings/`](learnings/index.md) | Lessons from doing, one per file |
 | [`docs/`](docs/README.md) | Deliverables: proposal, requirements, UX, architecture, quality, Scrum records, brand |
-| `scripts/index.py` | Rebuilds every `index.md`. Run `python3 scripts/index.py` |
+| `scripts/index.py` | Rebuilds every `index.md`. A bot runs it on `main` after each merge, so never commit an index |
 
 Code folders (`backend/`, `frontend/`, `intelligence/`) arrive with [#7](../../issues/7).

@@ -1,0 +1,29 @@
+name: indexes
+# Rebuilds every index.md on main after a merge, so pull requests never touch them and can't conflict over them.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: indexes
+  cancel-in-progress: false
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 scripts/index.py
+      - name: Commit if anything changed
+        run: |
+          git add -- '*/index.md'
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Rebuild indexes [bot]"
+          git pull --rebase origin main
+          git push origin HEAD:main
