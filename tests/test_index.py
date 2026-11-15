@@ -32,12 +32,11 @@ class IndexTest(unittest.TestCase):
         self.assertLess(text.index("## agile"), text.index("## quality"))
         self.assertEqual(index.main(check=True), 0)
 
-    def test_check_fails_when_stale_or_malformed(self):
+    def test_check_ignores_stale_indexes_but_fails_on_malformed_files(self):
         index.main(check=False)
         self.write("changes/2026-11-14-x.md", "---\ntitle: X\ndate: 2026-11-14\nowner: Liza\nai_used: no\n---\n")
-        self.assertEqual(index.main(check=True), 1)  # stale
-        index.main(check=False)
-        self.assertEqual(index.main(check=True), 0)
+        self.assertEqual(index.main(check=True), 0)  # stale is fine: the bot rebuilds on main
+        self.assertNotIn("2026-11-14-x.md", (index.ROOT / "changes/index.md").read_text())  # check never writes
         self.write("changes/bad.md", "---\ntitle: No owner\ndate: 2026-11-15\nai_used: yes\n---\n")
         self.assertEqual(index.main(check=True), 1)  # missing owner
         self.write("changes/bad.md", "no front matter")

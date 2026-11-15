@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Rebuild the index.md of every log folder from the front matter of its files.
 
-Nobody edits an index.md by hand. Add your file, then run:
+Nobody edits an index.md, and pull requests never include one, so two PRs can't conflict over them.
+The "indexes" GitHub Action runs this on main after every merge and commits the result.
 
-    python3 scripts/index.py          # rewrite the indexes
-    python3 scripts/index.py --check  # CI: fail if an index is stale or a file is malformed
-
-If two branches both touch an index.md and git reports a conflict, take either side and rerun the script.
+    python3 scripts/index.py          # rewrite the indexes (the bot does this; locally only to preview)
+    python3 scripts/index.py --check  # CI on PRs: fail if any file has bad or missing front matter
 """
 import sys
 from pathlib import Path
@@ -98,22 +97,19 @@ def build(folder):
 
 
 def main(check):
-    stale, errors = [], []
+    changed, errors = [], []
     for folder in FOLDERS:
         text, errs = build(folder)
         errors += errs
         index = ROOT / folder / "index.md"
-        if not index.exists() or index.read_text(encoding="utf-8") != text:
-            stale.append(f"{folder}/index.md")
-            if not check:
-                index.write_text(text, encoding="utf-8")
+        if not check and (not index.exists() or index.read_text(encoding="utf-8") != text):
+            index.write_text(text, encoding="utf-8")
+            changed.append(f"{folder}/index.md")
     for e in errors:
         print("ERROR", e)
-    if check and stale:
-        print("Stale:", ", ".join(stale), "-> run: python3 scripts/index.py")
-    elif not check:
-        print("Updated:", ", ".join(stale) or "nothing (all up to date)")
-    return 1 if errors or (check and stale) else 0
+    if not check:
+        print("Updated:", ", ".join(changed) or "nothing (all up to date)")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":

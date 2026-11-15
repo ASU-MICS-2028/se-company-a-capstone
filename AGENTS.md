@@ -21,11 +21,12 @@ You are helping **Nyansapo Systems** (Eric Sunu, Henry Kofi Brandoh, Joseph Etse
 - **`changes/YYYY-MM-DD-<slug>.md`** from [the template](changes/TEMPLATE.md). Set `owner` to the person you're helping, not yourself. Set `ai_used: yes`, and fill the AI-use table honestly: name yourself as the tool, what you did, and what the person checked. Leave the "checked" cell as "not yet checked" until they confirm.
 - **`decisions/`** file for any decision made.
 - **`learnings/`** for any lesson learned, and **`knowledge/`** for any new course fact. One idea per file, plain words, linked with relative markdown links.
-- **The plan:** tick the `Done when` boxes and add a dated `Log` line.
-- **Run `python3 scripts/index.py`**, then `python3 scripts/index.py --check` and `python3 -m unittest discover -s tests`.
+- **The plan:** tick the `Done when` boxes in *this issue's* plan only. Post progress as an issue comment (`gh issue comment`). Never edit another issue's plan.
+- **Run `python3 scripts/index.py --check` and `python3 -m unittest discover -s tests`.** Do not commit any `index.md`; a bot rebuilds them on `main`. If you regenerated them locally, run `git checkout origin/main -- '*/index.md'`.
+- **No shared-file edits.** Add new files rather than editing files another open PR might touch. See "No merge conflicts" in CONTRIBUTING.md.
 
 ## Never
 
 - Put secrets, student IDs, phone numbers, personal emails or real personal data in the repo. It is public.
-- Edit an `index.md` by hand.
+- Commit an `index.md`, or edit a file outside your issue's scope that another branch might be editing.
 - Name classmates from other groups or quote lecture transcripts at length.
