@@ -27,7 +27,7 @@ The frontend is **React in TypeScript**, set up and built with **Vite**. The pat
 
 - #10 starts with a Vite React TypeScript template and adds PWA support (for example `vite-plugin-pwa`).
 - API types are generated from the #7 OpenAPI contract, not written by hand.
-- The draft homepage (a Claude artifact, shared in the team chat) becomes the app's first page, with unbuilt features marked "coming soon".
+- The draft homepage ([docs/homepage/](../docs/homepage/README.md)) becomes the app's first page, with unbuilt features marked "coming soon".
 - Hosting gets its own decision file when we pick it.
 
 ## AI use

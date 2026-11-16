@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">
+<title>Twɛn Homepage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: product homepage. Sticky nav, a two-column hero (copy + button-phone mock), then full-width bands. Unbuilt features keep their real place in the layout with a "Coming soon" tag and the sprint they land in. */
+:root {
+  --bg: #fbf8f8; --surface: #ffffff; --fg: #22181a; --muted: #6b5c5f; --line: #e8dfe0;
+  --maroon: #8a1c2b; --accent: #8a1c2b; --gold: #e0a21b; --tint: #f4e9ea; --band: #8a1c2b; --on-band: #ffffff;
+  --mark: #8a1c2b; --ink: #22181a; --soon-bg: #fdf3dc; --soon-fg: #7a5507; --ok: #2f6b45;
+  --display: "Jost", "Futura", "Century Gothic", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #171113; --surface: #211a1c; --fg: #f2eaeb; --muted: #b3a3a6; --line: #3a2e31;
+  --accent: #d9808c; --tint: #2a1d20; --band: #5e1220; --mark: #d4707e; --ink: #f2eaeb; --soon-bg: #3a2c10; --soon-fg: #f0c766; --ok: #7cc497; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #171113; --surface: #211a1c; --fg: #f2eaeb; --muted: #b3a3a6; --line: #3a2e31;
+  --accent: #d9808c; --tint: #2a1d20; --band: #5e1220; --mark: #d4707e; --ink: #f2eaeb; --soon-bg: #3a2c10; --soon-fg: #f0c766; --ok: #7cc497; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+.in { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; text-wrap: balance; font-weight: 600; }
+h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); }
+h3 { font-size: 1.15rem; }
+p { margin: 0; max-width: 62ch; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+.eyebrow { font-family: var(--display); font-size: .78rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.soon { display: inline-flex; align-items: center; gap: 6px; font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--soon-bg); color: var(--soon-fg); white-space: nowrap; }
+.soon::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* nav */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+nav .in { display: flex; align-items: center; gap: 24px; padding-block: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); }
+.brand svg { width: 34px; height: 34px; }
+.brand b { font-family: var(--display); font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em; }
+nav ul { display: flex; gap: 20px; list-style: none; margin: 0 0 0 auto; padding: 0; align-items: center; flex-wrap: wrap; }
+nav ul a { color: var(--fg); text-decoration: none; font-size: .95rem; }
+nav ul a:hover { color: var(--accent); }
+nav .staff { display: inline-flex; gap: 8px; align-items: center; color: var(--muted); font-size: .95rem; }
+@media (max-width: 720px) { nav ul li.hide-sm { display: none; } nav ul { margin-left: 0; } }
+
+/* hero */
+.hero .in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: center; padding-block: 64px 72px; }
+.hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 600; letter-spacing: -.02em; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .copy { display: grid; gap: 22px; min-width: 0; }
+.hero .lede { font-size: 1.2rem; color: var(--muted); }
+.ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn { font-family: var(--display); font-weight: 600; font-size: 1rem; padding: 13px 22px; border-radius: 10px; border: 0; text-decoration: none; display: inline-flex; gap: 10px; align-items: center; }
+.btn.primary { background: var(--maroon); color: #fff; }
+.btn.primary[disabled] { opacity: .55; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--line); }
+.channels { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: .92rem; }
+.channels span::before { content: "✓ "; color: var(--ok); font-weight: 600; }
+@media (max-width: 820px) { .hero .in { grid-template-columns: minmax(0, 1fr); padding-block: 40px 48px; } }
+
+/* button phone */
+.phone-wrap { display: grid; justify-items: center; gap: 14px; position: relative; }
+.phone { width: 230px; max-width: 100%; background: #2b2426; border-radius: 34px 34px 46px 46px; padding: 22px 18px 26px; box-shadow: 0 20px 50px -20px rgba(34,24,26,.45); display: grid; gap: 16px; }
+.screen { background: #c9d6b9; color: #1d2416; border-radius: 6px; padding: 12px; font-family: var(--mono); font-size: .74rem; line-height: 1.45; min-height: 170px; box-shadow: inset 0 0 0 2px #a8b597; }
+.screen .t { font-weight: 500; border-bottom: 1px dashed #7d8a6c; padding-bottom: 4px; margin-bottom: 6px; display: block; }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.keys span { background: #3d3436; color: #e8dfe0; border-radius: 8px; text-align: center; font-family: var(--display); font-size: .82rem; padding: 4px 0; }
+.sms { position: absolute; right: max(0px, calc(50% - 230px)); bottom: 40px; background: var(--surface); color: var(--fg); border-radius: 14px 14px 4px 14px; padding: 10px 14px; max-width: 220px; font-size: .9rem; line-height: 1.4; box-shadow: 0 10px 30px -12px rgba(34,24,26,.4), 0 0 0 1px var(--line); }
+.sms small { display: block; color: var(--muted); font-size: .72rem; margin-bottom: 2px; font-family: var(--display); letter-spacing: .04em; }
+.example-note { font-size: .78rem; color: var(--muted); }
+@media (max-width: 520px) { .sms { position: static; } }
+
+/* sections */
+.sec { padding-block: 72px; border-top: 1px solid var(--line); }
+.sec .head { display: grid; gap: 10px; margin-bottom: 36px; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; counter-reset: s; }
+.step { padding: 0 28px 0 0; display: grid; gap: 10px; align-content: start; counter-increment: s; }
+.step + .step { padding-left: 28px; border-left: 1px solid var(--line); }
+.step::before { content: counter(s); font-family: var(--display); font-weight: 600; font-size: 2.6rem; line-height: 1; color: var(--accent); }
+.step p { color: var(--muted); font-size: .98rem; }
+@media (max-width: 760px) { .steps { grid-template-columns: minmax(0, 1fr); gap: 28px; } .step, .step + .step { padding: 0; border: 0; } }
+
+/* check wait */
+.check { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.card { background: var(--surface); border-radius: 14px; padding: 24px; box-shadow: 0 0 0 1px var(--line); display: grid; gap: 14px; }
+.card .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+label { font-weight: 600; font-size: .95rem; }
+.field { display: flex; gap: 8px; flex-wrap: wrap; }
+input[type="text"] { flex: 1 1 160px; min-width: 0; font: inherit; font-family: var(--mono); padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); }
+input[disabled] { opacity: .7; }
+.result { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.result div { display: grid; gap: 2px; }
+.result b { font-family: var(--display); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.result span { font-size: .8rem; color: var(--muted); }
+.card .fine { font-size: .82rem; color: var(--muted); }
+@media (max-width: 760px) { .check { grid-template-columns: minmax(0, 1fr); } }
+
+/* staff band */
+.band { background: var(--band); color: var(--on-band); }
+.band .in { padding-block: 72px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+.band .eyebrow { color: rgba(255,255,255,.75); }
+.band p { color: rgba(255,255,255,.88); }
+.band ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.band li { padding-block: 14px; border-bottom: 1px solid rgba(255,255,255,.18); display: grid; gap: 2px; }
+.band li b { font-family: var(--display); font-weight: 600; }
+.band li span { font-size: .95rem; color: rgba(255,255,255,.8); }
+.band .soon { background: rgba(255,255,255,.14); color: #ffd98a; }
+.board { background: rgba(0,0,0,.18); border-radius: 12px; padding: 18px; display: grid; gap: 10px; font-size: .92rem; }
+.board .tk { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.07); }
+.board .tk.now { background: rgba(224,162,27,.22); box-shadow: inset 3px 0 0 #e0a21b; }
+.board .tk code { font-family: var(--mono); }
+.board .tk em { font-style: normal; font-size: .78rem; color: rgba(255,255,255,.7); }
+@media (max-width: 820px) { .band .in { grid-template-columns: minmax(0, 1fr); } }
+
+/* trust */
+.trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.trust > div { display: grid; gap: 8px; align-content: start; }
+.trust p { color: var(--muted); font-size: .98rem; }
+@media (max-width: 760px) { .trust { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+
+/* roadmap */
+.road { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.road li { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 16px; padding-block: 14px; border-bottom: 1px solid var(--line); align-items: baseline; }
+.road li:first-child { border-top: 1px solid var(--line); }
+.road .when { font-family: var(--mono); font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.road .what b { font-family: var(--display); font-weight: 600; }
+.road .what span { display: block; color: var(--muted); font-size: .94rem; }
+.done { font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ok); white-space: nowrap; }
+.next { font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+.later { font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+@media (max-width: 600px) { .road li { grid-template-columns: minmax(0, 1fr) auto; } .road .when { grid-column: 1 / -1; } }
+
+footer { border-top: 1px solid var(--line); }
+footer .in { padding-block: 36px 48px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start; }
+footer .by { display: flex; align-items: center; gap: 12px; }
+footer .by svg { width: 160px; height: auto; }
+footer p { color: var(--muted); font-size: .88rem; }
+.emergency { background: var(--tint); border-radius: 10px; padding: 12px 16px; font-size: .92rem; max-width: 62ch; }
+@media (max-width: 700px) { footer .in { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) { .sms { animation: pop .5s .4s both ease-out; } @keyframes pop { from { transform: translateY(6px); } to { transform: none; } } }
+</style>
+
+<nav aria-label="Main">
+  <div class="in">
+    <a class="brand" href="#top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="t1"><title id="t1">Nyansapo Systems — wisdom knot mark</title><defs><mask id="u1" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256"><rect width="256" height="256" fill="white"/><circle cx="70" cy="128" r="16" fill="black"/><circle cx="186" cy="128" r="16" fill="black"/></mask></defs>
+<g fill="none" style="stroke:var(--mark)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+<g mask="url(#u1)">
+<path d="M104 48 C77 65 49 86 52 108 C53 117 61 123 70 128 L104 152 V228"/>
+<path d="M152 48 C179 65 207 86 204 108 C203 117 195 123 186 128 L152 152 V228"/>
+</g>
+<path d="M104 28 V104 L70 128 C44 152 45 167 67 183 C79 192 96 199 104 208"/>
+<path d="M152 28 V104 L186 128 C212 152 211 167 189 183 C177 192 160 199 152 208"/>
+<path d="M176 120.941 L186 128" style="stroke:var(--gold)" stroke-linecap="butt"/>
+</g></svg>
+<b>Twɛn</b></a>
+    <ul>
+      <li class="hide-sm"><a href="#how">How it works</a></li>
+      <li class="hide-sm"><a href="#wait">Check my wait</a></li>
+      <li class="hide-sm"><a href="#clinics">For clinics</a></li>
+      <li><span class="staff">Staff sign-in <span class="soon">Soon</span></span></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="in">
+    <div class="copy">
+      <span class="eyebrow">Virtual queue for outpatient clinics</span>
+      <h1>Wait at home, <em>not on the bench.</em></h1>
+      <p class="lede">Join the clinic queue from any phone. Twɛn gives you a ticket and your expected wait, then sends one text when it is time to leave.</p>
+      <div class="ctas">
+        <button class="btn primary" type="button" disabled aria-describedby="join-soon">Join a queue</button>
+        <a class="btn ghost" href="#how">See how it works</a>
+        <span class="soon" id="join-soon">Coming soon · Sprint 2</span>
+      </div>
+      <div class="channels"><span>Works on button phones</span><span>USSD and SMS</span><span>English and Twi</span><span>No app to install</span></div>
+    </div>
+    <div class="phone-wrap" aria-label="Example of the USSD menu on a button phone">
+      <div class="phone" aria-hidden="true">
+        <div class="screen"><span class="t">Twɛn · Example Polyclinic</span>1. Join today's OPD queue<br>2. Check my wait<br>3. Cancel my ticket<br>4. Twi / English<br><br>Reply: 1_</div>
+        <div class="keys"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>*</span><span>0</span><span>#</span></div>
+      </div>
+      <div class="sms" aria-hidden="true"><small>SMS · TWEN</small>Ticket A-042: your turn is near. Please come now. About 25 min.</div>
+      <span class="example-note">Example screens. The clinic and the ticket are not real.</span>
+    </div>
+  </div>
+</header>
+
+<section class="sec" id="how">
+  <div class="in">
+    <div class="head"><span class="eyebrow">How it works</span><h2>Three steps, and no early-morning wait</h2></div>
+    <div class="steps">
+      <div class="step"><h3>Join from any phone</h3><p>Dial the Twɛn code, send an SMS, use the website, or ask at the front desk. You get a ticket number straight away.</p></div>
+      <div class="step"><h3>Wait wherever you are</h3><p>Twɛn tells you about how long you will wait. Open your stall or go to work, and check your place at any time.</p></div>
+      <div class="step"><h3>Come when we text you</h3><p>One “come now” text arrives in time for your journey. Twɛn learns how long you usually take to get there.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="wait">
+  <div class="in check">
+    <div class="head" style="margin:0">
+      <span class="eyebrow">Check my wait</span>
+      <h2>Your place in the queue, any time</h2>
+      <p style="color:var(--muted)">Enter the ticket number from your SMS to see where you are and when to leave. You can also dial the code and choose option 2.</p>
+    </div>
+    <form class="card" onsubmit="event.preventDefault()">
+      <div class="row"><label for="ticket">Ticket number</label><span class="soon">Coming soon · Sprint 2</span></div>
+      <div class="field"><input id="ticket" type="text" placeholder="e.g. A-042" disabled><button class="btn primary" type="submit" disabled>Check</button></div>
+      <div class="result" aria-label="Example result">
+        <div><b>7</b><span>people ahead</span></div>
+        <div><b>~45 min</b><span>expected wait</span></div>
+        <div><b>10:40</b><span>leave home by</span></div>
+      </div>
+      <p class="fine">Example result. Waits are estimates and can change. Staff may call urgent cases first.</p>
+    </form>
+  </div>
+</section>
+
+<section class="band" id="clinics">
+  <div class="in">
+    <div style="display:grid;gap:16px">
+      <span class="eyebrow">For clinic staff</span>
+      <h2>A queue board that keeps working when the network drops</h2>
+      <p>The board runs in the browser on any clinic computer or tablet. If the internet goes down it keeps working, then catches up when the connection returns. No “come now” text is sent twice or lost.</p>
+      <ul>
+        <li><b>Call next, mark no-shows</b><span>One tap, and the patient's text goes out.</span></li>
+        <li><b>Priority stays with staff</b><span>Staff decide who goes first: pregnant women, older patients, emergencies. The system never decides this.</span></li>
+        <li><b>Desk tickets</b><span>Patients without a phone get a printed number at the desk.</span></li>
+      </ul>
+      <span class="soon" style="justify-self:start">Staff board coming soon · Sprints 2–3</span>
+    </div>
+    <div class="board" aria-label="Example of the staff board">
+      <span class="eyebrow">Example board · OPD room 2</span>
+      <div class="tk now"><code>A-041</code><span>Called · arriving</span><em>2 min ago</em></div>
+      <div class="tk"><code>A-042</code><span>“Come now” sent</span><em>~25 min</em></div>
+      <div class="tk"><code>A-043</code><span>Waiting at home</span><em>~38 min</em></div>
+      <div class="tk"><code>D-007</code><span>Desk ticket</span><em>~44 min</em></div>
+      <div class="tk"><code>A-044</code><span>Waiting at home</span><em>~51 min</em></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="trust">
+  <div class="in">
+    <div class="head"><span class="eyebrow">How we earn your trust</span><h2>Honest about waits and careful with your data</h2></div>
+    <div class="trust">
+      <div><h3>We test our estimates</h3><p>A model predicts each wait. We compare it with two simpler methods, a standard queueing formula and a fixed rule based on the time of day, and keep the model only if it is clearly more accurate.</p></div>
+      <div><h3>We collect very little</h3><p>Twɛn needs only your phone number and your ticket. It never asks what is wrong with you. We follow Ghana's Data Protection Act, 2012 (Act 843).</p></div>
+      <div><h3>We built it for real conditions</h3><p>The service is designed for button phones, weak signal and power cuts. A text that fails to send is retried until it is delivered, and it is never sent twice.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="progress">
+  <div class="in">
+    <div class="head"><span class="eyebrow">Where we are</span><h2>Built in six weeks, in the open</h2></div>
+    <ol class="road">
+      <li><span class="when">15 Nov</span><span class="what"><b>Proposal submitted</b><span>Problem, users, architecture and plan</span></span><span class="done">Done</span></li>
+      <li><span class="when">16–22 Nov</span><span class="what"><b>Sprint 1: design</b><span>API contract, wireframes, data generator, USSD in the sandbox</span></span><span class="next">Now</span></li>
+      <li><span class="when">23–29 Nov</span><span class="what"><b>Sprint 2: core queue</b><span>Joining, tickets, “come now” texts, staff board v1, first wait model</span></span><span class="later">Next</span></li>
+      <li><span class="when">30 Nov–6 Dec</span><span class="what"><b>Sprint 3: offline and smarter timing</b><span>Offline board, travel-time learning, usability test</span></span><span class="later">Planned</span></li>
+      <li><span class="when">7–10 Dec</span><span class="what"><b>Sprint 4: core demo</b><span>Hardening and first public deploy</span></span><span class="later">Planned</span></li>
+      <li><span class="when">18 Dec</span><span class="what"><b>ASERC presentation</b><span>Live demo and research paper</span></span><span class="later">Planned</span></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="in">
+    <div style="display:grid;gap:14px">
+      <div class="by"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 256" role="img" aria-labelledby="t2"><title id="t2">Nyansapo Systems</title><defs><mask id="u2" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256"><rect width="256" height="256" fill="white"/><circle cx="70" cy="128" r="16" fill="black"/><circle cx="186" cy="128" r="16" fill="black"/></mask></defs>
+<g fill="none" style="stroke:var(--mark)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+<g mask="url(#u2)">
+<path d="M104 48 C77 65 49 86 52 108 C53 117 61 123 70 128 L104 152 V228"/>
+<path d="M152 48 C179 65 207 86 204 108 C203 117 195 123 186 128 L152 152 V228"/>
+</g>
+<path d="M104 28 V104 L70 128 C44 152 45 167 67 183 C79 192 96 199 104 208"/>
+<path d="M152 28 V104 L186 128 C212 152 211 167 189 183 C177 192 160 199 152 208"/>
+<path d="M176 120.941 L186 128" style="stroke:var(--gold)" stroke-linecap="butt"/>
+</g><g style="fill:var(--ink)"><g transform="translate(280 142)"><path d="M5.372 -0.000L5.372 -51.272L18.700 -51.272L43.316 -19.924L43.316 -51.272L56.576 -51.272L56.576 -0.000L43.316 -0.000L18.700 -31.348L18.700 -0.000Z"/><path d="M78.812 -4.760L61.948 -34.884L76.228 -34.884L85.544 -17.000L94.588 -34.884L108.732 -34.884L80.716 17.408L66.912 17.408Z"/><path d="M124.372 -17.544Q124.372 -15.844 124.984 -14.382Q125.596 -12.920 126.650 -11.832Q127.704 -10.744 129.166 -10.132Q130.628 -9.520 132.328 -9.520Q133.960 -9.520 135.422 -10.132Q136.884 -10.744 137.938 -11.832Q138.992 -12.920 139.638 -14.348Q140.284 -15.776 140.284 -17.408Q140.284 -19.040 139.638 -20.502Q138.992 -21.964 137.938 -23.052Q136.884 -24.140 135.422 -24.752Q133.960 -25.364 132.328 -25.364Q130.628 -25.364 129.166 -24.752Q127.704 -24.140 126.650 -23.052Q125.596 -21.964 124.984 -20.570Q124.372 -19.176 124.372 -17.544ZM139.876 -34.884L152.252 -34.884L152.252 -0.000L139.876 -0.000L139.876 -3.876Q135.932 1.088 129.200 1.088Q125.392 1.088 122.196 -0.306Q119.000 -1.700 116.620 -4.216Q114.240 -6.732 112.914 -10.132Q111.588 -13.532 111.588 -17.544Q111.588 -21.284 112.880 -24.650Q114.172 -28.016 116.484 -30.532Q118.796 -33.048 121.992 -34.510Q125.188 -35.972 129.064 -35.972Q135.592 -35.972 139.876 -31.416Z"/><path d="M160.616 -34.884L172.924 -34.884L172.924 -30.464Q175.440 -33.524 178.024 -34.578Q180.608 -35.632 184.076 -35.632Q187.748 -35.632 190.366 -34.442Q192.984 -33.252 194.820 -31.076Q196.316 -29.308 196.860 -27.132Q197.404 -24.956 197.404 -22.168L197.404 -0.000L185.096 -0.000L185.096 -17.612Q185.096 -20.196 184.722 -21.794Q184.348 -23.392 183.396 -24.344Q182.580 -25.160 181.560 -25.500Q180.540 -25.840 179.384 -25.840Q176.256 -25.840 174.590 -23.970Q172.924 -22.100 172.924 -18.632L172.924 -0.000L160.616 -0.000Z"/><path d="M228.888 -25.908Q225.488 -27.676 222.224 -27.676Q220.524 -27.676 219.470 -26.996Q218.416 -26.316 218.416 -25.160Q218.416 -24.548 218.586 -24.174Q218.756 -23.800 219.334 -23.460Q219.912 -23.120 221.034 -22.848Q222.156 -22.576 223.992 -22.168Q229.092 -21.148 231.608 -18.530Q234.124 -15.912 234.124 -11.832Q234.124 -8.772 232.900 -6.324Q231.676 -3.876 229.500 -2.210Q227.324 -0.544 224.264 0.374Q221.204 1.292 217.532 1.292Q210.460 1.292 203.592 -2.720L208.080 -11.424Q213.248 -7.888 217.872 -7.888Q219.572 -7.888 220.660 -8.636Q221.748 -9.384 221.748 -10.540Q221.748 -11.220 221.578 -11.662Q221.408 -12.104 220.864 -12.478Q220.320 -12.852 219.266 -13.158Q218.212 -13.464 216.512 -13.804Q210.800 -14.960 208.522 -17.238Q206.244 -19.516 206.244 -23.528Q206.244 -26.452 207.332 -28.798Q208.420 -31.144 210.460 -32.776Q212.500 -34.408 215.390 -35.292Q218.280 -36.176 221.816 -36.176Q227.596 -36.176 233.036 -33.932Z"/><path d="M251.804 -17.544Q251.804 -15.844 252.416 -14.382Q253.028 -12.920 254.082 -11.832Q255.136 -10.744 256.598 -10.132Q258.060 -9.520 259.760 -9.520Q261.392 -9.520 262.854 -10.132Q264.316 -10.744 265.370 -11.832Q266.424 -12.920 267.070 -14.348Q267.716 -15.776 267.716 -17.408Q267.716 -19.040 267.070 -20.502Q266.424 -21.964 265.370 -23.052Q264.316 -24.140 262.854 -24.752Q261.392 -25.364 259.760 -25.364Q258.060 -25.364 256.598 -24.752Q255.136 -24.140 254.082 -23.052Q253.028 -21.964 252.416 -20.570Q251.804 -19.176 251.804 -17.544ZM267.308 -34.884L279.684 -34.884L279.684 -0.000L267.308 -0.000L267.308 -3.876Q263.364 1.088 256.632 1.088Q252.824 1.088 249.628 -0.306Q246.432 -1.700 244.052 -4.216Q241.672 -6.732 240.346 -10.132Q239.020 -13.532 239.020 -17.544Q239.020 -21.284 240.312 -24.650Q241.604 -28.016 243.916 -30.532Q246.228 -33.048 249.424 -34.510Q252.620 -35.972 256.496 -35.972Q263.024 -35.972 267.308 -31.416Z"/><path d="M315.860 -17.340Q315.860 -18.972 315.282 -20.434Q314.704 -21.896 313.616 -22.984Q312.528 -24.072 311.066 -24.718Q309.604 -25.364 307.904 -25.364Q306.272 -25.364 304.844 -24.752Q303.416 -24.140 302.362 -23.052Q301.308 -21.964 300.662 -20.502Q300.016 -19.040 300.016 -17.408Q300.016 -15.776 300.628 -14.348Q301.240 -12.920 302.328 -11.866Q303.416 -10.812 304.878 -10.166Q306.340 -9.520 307.972 -9.520Q309.604 -9.520 311.032 -10.132Q312.460 -10.744 313.514 -11.832Q314.568 -12.920 315.214 -14.348Q315.860 -15.776 315.860 -17.340ZM300.356 17.408L288.048 17.408L288.048 -34.884L300.356 -34.884L300.356 -31.008Q304.300 -35.972 311.100 -35.972Q314.840 -35.972 318.070 -34.510Q321.300 -33.048 323.680 -30.532Q326.060 -28.016 327.386 -24.616Q328.712 -21.216 328.712 -17.340Q328.712 -13.464 327.386 -10.132Q326.060 -6.800 323.714 -4.284Q321.368 -1.768 318.172 -0.340Q314.976 1.088 311.236 1.088Q304.708 1.088 300.356 -3.400Z"/><path d="M347.344 -17.612Q347.344 -15.844 347.990 -14.382Q348.636 -12.920 349.690 -11.832Q350.744 -10.744 352.206 -10.132Q353.668 -9.520 355.300 -9.520Q356.932 -9.520 358.394 -10.132Q359.856 -10.744 360.910 -11.832Q361.964 -12.920 362.610 -14.382Q363.256 -15.844 363.256 -17.544Q363.256 -19.176 362.610 -20.638Q361.964 -22.100 360.910 -23.188Q359.856 -24.276 358.394 -24.888Q356.932 -25.500 355.300 -25.500Q353.668 -25.500 352.206 -24.888Q350.744 -24.276 349.690 -23.188Q348.636 -22.100 347.990 -20.672Q347.344 -19.244 347.344 -17.612ZM334.356 -17.748Q334.356 -21.624 335.920 -24.990Q337.484 -28.356 340.272 -30.838Q343.060 -33.320 346.902 -34.748Q350.744 -36.176 355.300 -36.176Q359.788 -36.176 363.630 -34.782Q367.472 -33.388 370.294 -30.906Q373.116 -28.424 374.680 -24.990Q376.244 -21.556 376.244 -17.408Q376.244 -13.260 374.646 -9.826Q373.048 -6.392 370.260 -3.910Q367.472 -1.428 363.562 -0.068Q359.652 1.292 355.096 1.292Q350.608 1.292 346.800 -0.068Q342.992 -1.428 340.238 -3.944Q337.484 -6.460 335.920 -9.962Q334.356 -13.464 334.356 -17.748Z"/></g>
+<g transform="translate(284 186)"><path d="M11.365 -14.115L9.335 -12.912Q8.766 -13.900 8.250 -14.201Q7.713 -14.545 6.864 -14.545Q5.822 -14.545 5.135 -13.954Q4.447 -13.374 4.447 -12.493Q4.447 -11.279 6.252 -10.538L7.906 -9.861Q9.926 -9.045 10.860 -7.869Q11.795 -6.692 11.795 -4.984Q11.795 -2.696 10.270 -1.203Q8.733 0.301 6.456 0.301Q4.297 0.301 2.890 -0.978Q1.504 -2.256 1.160 -4.576L3.695 -5.135Q3.867 -3.674 4.297 -3.115Q5.070 -2.041 6.553 -2.041Q7.724 -2.041 8.497 -2.825Q9.271 -3.609 9.271 -4.812Q9.271 -5.296 9.136 -5.699Q9.002 -6.102 8.717 -6.440Q8.433 -6.778 7.981 -7.074Q7.530 -7.369 6.907 -7.638L5.307 -8.304Q1.901 -9.743 1.901 -12.515Q1.901 -14.384 3.330 -15.641Q4.759 -16.908 6.886 -16.908Q9.754 -16.908 11.365 -14.115Z"/><path d="M29.165 -7.165L23.751 -16.586L26.630 -16.586L30.422 -9.958L34.225 -16.586L37.104 -16.586L31.668 -7.165L31.668 -0.000L29.165 -0.000Z"/><path d="M59.394 -14.115L57.363 -12.912Q56.794 -13.900 56.278 -14.201Q55.741 -14.545 54.893 -14.545Q53.851 -14.545 53.163 -13.954Q52.476 -13.374 52.476 -12.493Q52.476 -11.279 54.280 -10.538L55.935 -9.861Q57.954 -9.045 58.889 -7.869Q59.823 -6.692 59.823 -4.984Q59.823 -2.696 58.298 -1.203Q56.762 0.301 54.484 0.301Q52.325 0.301 50.918 -0.978Q49.532 -2.256 49.188 -4.576L51.724 -5.135Q51.896 -3.674 52.325 -3.115Q53.099 -2.041 54.581 -2.041Q55.752 -2.041 56.525 -2.825Q57.299 -3.609 57.299 -4.812Q57.299 -5.296 57.165 -5.699Q57.030 -6.102 56.746 -6.440Q56.461 -6.778 56.010 -7.074Q55.559 -7.369 54.936 -7.638L53.335 -8.304Q49.930 -9.743 49.930 -12.515Q49.930 -14.384 51.358 -15.641Q52.787 -16.908 54.914 -16.908Q57.782 -16.908 59.394 -14.115Z"/><path d="M78.418 -14.233L78.418 -0.000L75.915 -0.000L75.915 -14.233L72.102 -14.233L72.102 -16.586L82.221 -16.586L82.221 -14.233Z"/><path d="M104.607 -14.233L97.958 -14.233L97.958 -10.248L104.414 -10.248L104.414 -7.896L97.958 -7.896L97.958 -2.353L104.607 -2.353L104.607 -0.000L95.455 -0.000L95.455 -16.586L104.607 -16.586Z"/><path d="M118.314 -0.000L121.806 -17.832L127.499 -4.941L133.396 -17.832L136.533 -0.000L133.966 -0.000L132.365 -10.012L127.456 0.763L122.687 -10.022L120.903 -0.000Z"/><path d="M160.424 -14.115L158.394 -12.912Q157.824 -13.900 157.309 -14.201Q156.771 -14.545 155.923 -14.545Q154.881 -14.545 154.193 -13.954Q153.506 -13.374 153.506 -12.493Q153.506 -11.279 155.311 -10.538L156.965 -9.861Q158.984 -9.045 159.919 -7.869Q160.854 -6.692 160.854 -4.984Q160.854 -2.696 159.328 -1.203Q157.792 0.301 155.515 0.301Q153.355 0.301 151.948 -0.978Q150.562 -2.256 150.219 -4.576L152.754 -5.135Q152.926 -3.674 153.355 -3.115Q154.129 -2.041 155.611 -2.041Q156.782 -2.041 157.556 -2.825Q158.329 -3.609 158.329 -4.812Q158.329 -5.296 158.195 -5.699Q158.061 -6.102 157.776 -6.440Q157.491 -6.778 157.040 -7.074Q156.589 -7.369 155.966 -7.638L154.365 -8.304Q150.960 -9.743 150.960 -12.515Q150.960 -14.384 152.389 -15.641Q153.817 -16.908 155.944 -16.908Q158.812 -16.908 160.424 -14.115Z"/></g>
+</g></svg>
+</div>
+      <p>Twɛn is a student prototype built for ICS 530 at Ashesi University. It is not yet a live service, and the demo uses simulated patients only.</p>
+      <p class="emergency"><b>In an emergency</b>, go straight to the nearest hospital or call <b>112</b>. Do not use Twɛn.</p>
+    </div>
+    <p><a href="https://github.com/ASU-MICS-2028/se-company-a-capstone" target="_blank" rel="noopener">Source code on GitHub</a></p>
+  </div>
+</footer>
+</body></html>
