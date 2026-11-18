@@ -1,18 +1,77 @@
-<p><img src="docs/brand/logo.svg" alt="Nyansapo Systems" width="360"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-reversed.svg">
+    <img src="docs/brand/logo.svg" alt="Nyansapo Systems" width="380">
+  </picture>
+</p>
 
-# Nyansapo Systems
+<p align="center">
+  <b>Wisdom, engineered.</b><br>
+  ICS 530 Software Engineering Essentials · Company A · Ashesi University · 9 Nov – 18 Dec 2026
+</p>
 
-**ICS 530 Software Engineering Essentials capstone · Ashesi University · 09 Nov – 18 Dec 2026**
+<p align="center">
+  <img alt="Product: Twɛn" src="https://img.shields.io/badge/product-Tw%C9%9Bn-8a1c2b?style=flat-square">
+  <img alt="Proposal: awaiting approval" src="https://img.shields.io/badge/proposal-awaiting_approval-e0a21b?style=flat-square">
+  <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-22181a?style=flat-square">
+  <img alt="React + TypeScript + Vite" src="https://img.shields.io/badge/frontend-React_%2B_TS_%2B_Vite-22181a?style=flat-square">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/db-PostgreSQL-22181a?style=flat-square">
+  <img alt="ASERC 18 Dec 2026" src="https://img.shields.io/badge/ASERC-18_Dec_2026-8a1c2b?style=flat-square">
+</p>
 
-Nyansapo, the Adinkra "wisdom knot", stands for wisdom, ingenuity, intelligence and patience. We are building an intelligent software system for a real African problem, and presenting it at the Ashesi Software Engineering Research Conference (ASERC) on 18 Dec 2026.
+<p align="center">
+  <a href="#team">Team</a> ·
+  <a href="#what-were-building">Product</a> ·
+  <a href="#milestones">Milestones</a> ·
+  <a href="#how-we-work">How we work</a> ·
+  <a href="#workstreams">Workstreams</a> ·
+  <a href="#repository-map">Repository map</a>
+</p>
 
-> **Product:** not chosen yet, see [#1](../../issues/1). This section will describe what we are building once it is decided.
+---
+
+Nyansapo, the Adinkra "wisdom knot", stands for wisdom, ingenuity, intelligence and patience. We build dependable, intelligent software for real African problems, and we present it at the Ashesi Software Engineering Research Conference (ASERC) on 18 Dec 2026.
 
 ## Team
 
-Eric Sunu · Henry Kofi Brandoh · Joseph Etse · Kobina Opei Jr. · Liza Aikins · Micheal Boadi
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://github.com/ElikplimSunu"><img src="https://github.com/ElikplimSunu.png?size=160" width="96" alt="Eric Sunu"><br><b>Eric Sunu</b></a><br>
+      <sub><code>ElikplimSunu</code></sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/henryhkb"><img src="https://github.com/henryhkb.png?size=160" width="96" alt="Henry Kofi Brandoh"><br><b>Henry Kofi Brandoh</b></a><br>
+      <sub><code>henryhkb</code></sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/josetseph"><img src="https://github.com/josetseph.png?size=160" width="96" alt="Joseph Etse"><br><b>Joseph Etse</b></a><br>
+      <sub><code>josetseph</code></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://github.com/AdzeyenaOpei"><img src="https://github.com/AdzeyenaOpei.png?size=160" width="96" alt="Kobina Opei Jr."><br><b>Kobina Opei Jr.</b></a><br>
+      <sub><code>AdzeyenaOpei</code></sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/lnaikins"><img src="https://github.com/lnaikins.png?size=160" width="96" alt="Liza Aikins"><br><b>Liza Aikins</b></a><br>
+      <sub><code>lnaikins</code></sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/1realMicheal"><img src="https://github.com/1realMicheal.png?size=160" width="96" alt="Micheal Boadi"><br><b>Micheal Boadi</b></a><br>
+      <sub><code>1realMicheal</code></sub>
+    </td>
+  </tr>
+</table>
 
-Roles (Product Owner, Scrum Master, Developers) are decided in [#3](../../issues/3).
+Photos are each person's GitHub avatar, so change yours on GitHub and it updates here. Roles (Product Owner, Scrum Master, Developers) are decided in [#3](../../issues/3).
+
+## What we're building
+
+**Twɛn** (Twi for "wait") is a virtual queue for outpatient clinics. Patients join from any phone by USSD, SMS, the web or the front desk. They get a ticket and a predicted wait, and one "come now" text when their turn is near. Staff run the queue from a board that keeps working offline. A wait-time model is tested against an M/M/c queueing formula and a simple time-of-day rule, and we keep it only if it beats both.
+
+Why we chose it: [decision](decisions/2026-11-15-product-choice-twen.md) · Proposal draft: [twen-clinic-queue.md](docs/proposal/drafts/twen-clinic-queue.md) · Brand: [docs/brand/](docs/brand/README.md)
 
 ## Milestones
 
