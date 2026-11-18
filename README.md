@@ -38,34 +38,40 @@ Nyansapo, the Adinkra "wisdom knot", stands for wisdom, ingenuity, intelligence 
   <tr>
     <td align="center" width="33%">
       <a href="https://github.com/ElikplimSunu"><img src="https://github.com/ElikplimSunu.png?size=160" width="96" alt="Eric Sunu"><br><b>Eric Sunu</b></a><br>
-      <sub><code>ElikplimSunu</code></sub>
+      <sub><code>ElikplimSunu</code></sub><br>
+      <sub>Architecture &amp; backend</sub>
     </td>
     <td align="center" width="33%">
       <a href="https://github.com/henryhkb"><img src="https://github.com/henryhkb.png?size=160" width="96" alt="Henry Kofi Brandoh"><br><b>Henry Kofi Brandoh</b></a><br>
-      <sub><code>henryhkb</code></sub>
+      <sub><code>henryhkb</code></sub><br>
+      <sub>Intelligent component</sub>
     </td>
     <td align="center" width="33%">
       <a href="https://github.com/josetseph"><img src="https://github.com/josetseph.png?size=160" width="96" alt="Joseph Etse"><br><b>Joseph Etse</b></a><br>
-      <sub><code>josetseph</code></sub>
+      <sub><code>josetseph</code></sub><br>
+      <sub>Scrum Master · quality &amp; CI</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
       <a href="https://github.com/AdzeyenaOpei"><img src="https://github.com/AdzeyenaOpei.png?size=160" width="96" alt="Kobina Opei Jr."><br><b>Kobina Opei Jr.</b></a><br>
-      <sub><code>AdzeyenaOpei</code></sub>
+      <sub><code>AdzeyenaOpei</code></sub><br>
+      <sub>Frontend &amp; integration</sub>
     </td>
     <td align="center" width="33%">
       <a href="https://github.com/lnaikins"><img src="https://github.com/lnaikins.png?size=160" width="96" alt="Liza Aikins"><br><b>Liza Aikins</b></a><br>
-      <sub><code>lnaikins</code></sub>
+      <sub><code>lnaikins</code></sub><br>
+      <sub>Product Owner · requirements &amp; UX</sub>
     </td>
     <td align="center" width="33%">
       <a href="https://github.com/1realMicheal"><img src="https://github.com/1realMicheal.png?size=160" width="96" alt="Micheal Boadi"><br><b>Micheal Boadi</b></a><br>
-      <sub><code>1realMicheal</code></sub>
+      <sub><code>1realMicheal</code></sub><br>
+      <sub>ACM paper &amp; presentation</sub>
     </td>
   </tr>
 </table>
 
-Photos are each person's GitHub avatar, so change yours on GitHub and it updates here. Roles (Product Owner, Scrum Master, Developers) are decided in [#3](../../issues/3).
+Photos are each person's GitHub avatar, so change yours on GitHub and it updates here. Who owns which issue, and why: [roles and workstream owners](decisions/2026-11-18-roles-and-workstream-owners.md).
 
 ## What we're building
 
