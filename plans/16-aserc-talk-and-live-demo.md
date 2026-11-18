@@ -2,7 +2,7 @@
 issue: 16
 title: ASERC talk and live demo
 workstream: presentation
-owner: unassigned
+owner: Micheal Boadi
 status: todo
 milestone: M3 Final and ASERC
 depends_on: #8, #9, #10

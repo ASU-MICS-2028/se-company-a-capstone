@@ -2,7 +2,7 @@
 issue: 8
 title: Backend: API and database built to the contract
 workstream: backend
-owner: unassigned
+owner: Eric Sunu
 status: todo
 milestone: M2 Core demo
 depends_on: #7

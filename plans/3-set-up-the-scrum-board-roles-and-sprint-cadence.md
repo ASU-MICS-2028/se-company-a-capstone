@@ -2,7 +2,7 @@
 issue: 3
 title: Set up the Scrum board, roles and sprint cadence
 workstream: scrum
-owner: unassigned
+owner: Joseph Etse
 status: todo
 milestone: M1 Proposal
 depends_on: none

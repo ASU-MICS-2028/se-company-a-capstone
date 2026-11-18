@@ -2,7 +2,7 @@
 issue: 18
 title: Integration: wire frontend, backend and intelligent component end to end
 workstream: backend
-owner: unassigned
+owner: Kobina Opei Jr.
 status: todo
 milestone: M2 Core demo
 depends_on: #8, #9, #10

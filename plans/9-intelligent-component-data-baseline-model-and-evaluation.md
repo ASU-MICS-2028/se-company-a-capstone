@@ -2,7 +2,7 @@
 issue: 9
 title: Intelligent component: data, baseline model and evaluation
 workstream: intelligence
-owner: unassigned
+owner: Henry Kofi Brandoh
 status: todo
 milestone: M2 Core demo
 depends_on: #1

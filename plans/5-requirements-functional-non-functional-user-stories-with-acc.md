@@ -2,7 +2,7 @@
 issue: 5
 title: Requirements: functional, non-functional, user stories with acceptance criteria
 workstream: requirements-ux
-owner: unassigned
+owner: Liza Aikins
 status: todo
 milestone: M2 Core demo
 depends_on: #1

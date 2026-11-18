@@ -2,7 +2,7 @@
 issue: 2
 title: Write the full project proposal (2-4 pages)
 workstream: product
-owner: unassigned
+owner: Joseph Etse
 status: todo
 milestone: M1 Proposal
 depends_on: #1

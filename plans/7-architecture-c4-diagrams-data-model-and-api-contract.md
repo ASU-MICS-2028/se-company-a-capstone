@@ -2,7 +2,7 @@
 issue: 7
 title: Architecture: C4 diagrams, data model and API contract
 workstream: architecture
-owner: unassigned
+owner: Eric Sunu
 status: todo
 milestone: M2 Core demo
 depends_on: #1
