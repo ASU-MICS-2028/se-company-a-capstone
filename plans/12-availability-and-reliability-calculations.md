@@ -2,7 +2,7 @@
 issue: 12
 title: Availability and reliability calculations
 workstream: quality
-owner: unassigned
+owner: Joseph Etse
 status: todo
 milestone: M3 Final and ASERC
 depends_on: #7

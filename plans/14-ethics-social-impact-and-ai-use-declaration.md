@@ -2,7 +2,7 @@
 issue: 14
 title: Ethics, social impact and AI use declaration
 workstream: paper
-owner: unassigned
+owner: Kobina Opei Jr.
 status: todo
 milestone: M3 Final and ASERC
 depends_on: #1

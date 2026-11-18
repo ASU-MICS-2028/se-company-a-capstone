@@ -2,7 +2,7 @@
 issue: 10
 title: Frontend: screens built against a mock of the API contract
 workstream: frontend
-owner: unassigned
+owner: Kobina Opei Jr.
 status: todo
 milestone: M2 Core demo
 depends_on: #6, #7

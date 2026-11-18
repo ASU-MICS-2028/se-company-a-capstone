@@ -2,7 +2,7 @@
 issue: 15
 title: Scrum records: sprint backlogs, burndown charts and retrospectives
 workstream: scrum
-owner: unassigned
+owner: Joseph Etse
 status: todo
 milestone: M3 Final and ASERC
 depends_on: #3

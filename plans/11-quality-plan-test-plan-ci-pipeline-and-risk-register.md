@@ -2,7 +2,7 @@
 issue: 11
 title: Quality plan: test plan, CI pipeline and risk register
 workstream: quality
-owner: unassigned
+owner: Joseph Etse
 status: todo
 milestone: M2 Core demo
 depends_on: none

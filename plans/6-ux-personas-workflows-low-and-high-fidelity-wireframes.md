@@ -2,7 +2,7 @@
 issue: 6
 title: UX: personas, workflows, low- and high-fidelity wireframes
 workstream: requirements-ux
-owner: unassigned
+owner: Liza Aikins
 status: todo
 milestone: M2 Core demo
 depends_on: #1

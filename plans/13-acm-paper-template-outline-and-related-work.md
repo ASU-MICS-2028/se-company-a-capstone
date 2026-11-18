@@ -2,7 +2,7 @@
 issue: 13
 title: ACM paper: template, outline and related work
 workstream: paper
-owner: unassigned
+owner: Micheal Boadi
 status: todo
 milestone: M3 Final and ASERC
 depends_on: none
