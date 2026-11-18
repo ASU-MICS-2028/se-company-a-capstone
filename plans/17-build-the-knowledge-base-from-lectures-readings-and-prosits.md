@@ -18,7 +18,7 @@ Turn everything the course has taught us into small linked notes, so nobody has 
 
 ## Done when
 
-- [ ] Atomic notes in `knowledge/` from lectures 1-13, the course documents and readings
+- [ ] Atomic notes in `knowledge/` from every lecture (1-14 so far; add each new lecture as its notes arrive), the course documents and readings
 - [ ] Learnings from Prosit 1, Prosit 2 and the AOS notification design in `learnings/`
 - [ ] Indexes generated
 - [ ] Each teammate reviews the notes for their own workstream and fixes errors
