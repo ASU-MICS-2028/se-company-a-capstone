@@ -15,7 +15,7 @@ ai_used: yes
 - New issues #29 (user research, owner Liza) and #30 (usability evaluation, owner Micheal, drawn at random), with plan files, both on the project board
 - `decisions/2026-11-18-double-diamond-inside-scrum.md`: how the double diamond maps onto our sprints
 - `docs/ux/research/survey.md` and `interview-guide.md`: drafts for Liza to edit
-- A starter Figma file for #6 (link in #6)
+- The team Figma file, [Nyansapo · Twɛn](https://www.figma.com/design/0GP0jfVBxCkrpufeOqn3AT/Nyansapo--Tw%C9%9Bn), set up for #6: a cover, one page per double-diamond stage, a research board with five sections, and a Foundations page with the brand colours as Figma variables
 
 ## Why
 
@@ -33,7 +33,7 @@ The plan skipped the Discover and Deliver stages the course teaches. Without rea
 |---|---|---|---|
 | Issues, plans, decision | Claude Code | Drafted them from our course knowledge notes | Joseph approved the plan |
 | Survey and interview guide | Claude Code | Drafted the questions and the consent text | **Not yet:** Liza edits before use |
-| Figma starter | Claude Code via Figma | Created the file and page structure | Not yet |
+| Figma setup | Claude Code via the Figma connector | Built the pages, colour variables, cover, research board and Foundations page in the file Joseph created | Not yet |
 
 ## How to check it
 
