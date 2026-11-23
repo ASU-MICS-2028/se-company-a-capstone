@@ -4,7 +4,7 @@ date: 2026-11-23
 owner: Joseph Etse
 contributors: Liza Aikins, Henry Kofi Brandoh, Kobina Opei Jr. (interviews)
 issue: "#29"
-pr: ""
+pr: "#37"
 ai_used: yes
 ---
 
