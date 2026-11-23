@@ -1,7 +1,7 @@
 ---
 title: Roles and workstream owners
 date: 2026-11-18
-status: accepted
+status: superseded by 2026-11-23-product-owner-is-the-instructor.md
 deciders: Joseph Etse (Scrum Master), for Nyansapo Systems
 issue: "#3"
 ai_used: yes
