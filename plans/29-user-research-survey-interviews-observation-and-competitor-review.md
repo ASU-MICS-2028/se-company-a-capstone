@@ -19,8 +19,8 @@ Run the Discover stage of the double diamond, so personas, requirements (#5) and
 ## Done when
 
 - [ ] Survey sent, with at least 20 responses
-- [ ] 6-12 interviews (each member does 1-2), notes in `docs/ux/research/interviews/`
-- [ ] At least one clinic staff interview, or a note on why we couldn't get one
+- [x] ~~6-12 interviews~~ Two interviews (P01, S01), notes in `docs/ux/research/interviews/`. We stopped at two: see [decision](../decisions/2026-11-23-stop-interviews-use-survey-and-literature.md)
+- [x] At least one clinic staff interview (S01)
 - [ ] Competitor review table
 - [ ] `docs/ux/research/findings.md`: top needs, surprises, changes to personas and requirements
 
@@ -47,3 +47,4 @@ Run the Discover stage of the double diamond, so personas, requirements (#5) and
 ## Log
 
 - 2026-11-18: Plan created; owner Liza Aikins (Product Owner); everyone runs interviews.
+- 2026-11-23: Two interviews done at a health centre (P01 by Henry and Kobina, S01 by Joseph and Liza). We decided to stop at two and lean on the survey and the published studies; `findings.md` started.
