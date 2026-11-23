@@ -4,7 +4,7 @@ date: 2026-11-23
 owner: Joseph Etse
 contributors: one other team member (co-interviewer)
 issue: "#29"
-pr: ""
+pr: "#36"
 ai_used: yes
 ---
 
