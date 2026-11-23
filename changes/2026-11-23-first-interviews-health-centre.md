@@ -2,7 +2,7 @@
 title: First two research interviews (health centre)
 date: 2026-11-23
 owner: Joseph Etse
-contributors: one other team member (co-interviewer)
+contributors: Liza Aikins, Henry Kofi Brandoh, Kobina Opei Jr.
 issue: "#29"
 pr: "#36"
 ai_used: yes
@@ -22,7 +22,8 @@ Added anonymised notes for P01 (a patient) and S01 (a nurse) in `docs/ux/researc
 
 | Person | Part |
 |---|---|
-| Joseph Etse | Interviewed both, with a second team member |
+| Joseph Etse | Led the interviews and asked most of the questions |
+| Liza Aikins, Henry Kofi Brandoh, Kobina Opei Jr. | Interviewed with Joseph, asked follow-up questions and recorded |
 
 ## AI use
 
