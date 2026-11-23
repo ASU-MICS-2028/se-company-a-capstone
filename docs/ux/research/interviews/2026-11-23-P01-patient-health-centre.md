@@ -2,7 +2,7 @@
 
 **Who:** an adult woman who runs her own business, with an employee. She was visiting with two children. She uses a smartphone.
 **Where:** a community health centre in Greater Accra, on a quiet morning.
-**How:** in person, mostly in Twi, about 9 minutes. Recorded with her agreement. The audio was transcribed by an AI tool and then deleted. Interviewed by Joseph Etse and a second team member.
+**How:** in person, mostly in Twi, about 9 minutes. Recorded and transcribed by an AI tool. TODO: confirm consent to record, and delete the audio once these notes are merged. Interviewed by Joseph Etse and a second team member.
 **Removed from these notes:** her name, places that could identify her, and the health details she volunteered.
 
 ## What she said
