@@ -61,7 +61,7 @@ Nyansapo, the Adinkra "wisdom knot", stands for wisdom, ingenuity, intelligence 
     <td align="center" width="33%">
       <a href="https://github.com/lnaikins"><img src="https://github.com/lnaikins.png?size=160" width="96" alt="Liza Aikins"><br><b>Liza Aikins</b></a><br>
       <sub><code>lnaikins</code></sub><br>
-      <sub>Product Owner · requirements &amp; UX</sub>
+      <sub>Requirements &amp; UX lead</sub>
     </td>
     <td align="center" width="33%">
       <a href="https://github.com/1realMicheal"><img src="https://github.com/1realMicheal.png?size=160" width="96" alt="Micheal Boadi"><br><b>Micheal Boadi</b></a><br>
