@@ -1,0 +1,83 @@
+name: code
+# Lint and test the code folders on every PR. Each job skips its steps until its folder exists,
+# so this workflow is green now and starts checking as soon as backend/, intelligence/ or frontend/ land.
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [backend, intelligence]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: twen_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/twen_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Folder present?
+        id: has
+        run: |
+          if [ -f "${{ matrix.dir }}/requirements.txt" ]; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "No ${{ matrix.dir }}/requirements.txt yet; skipping."; fi
+      - uses: actions/setup-python@v5
+        if: steps.has.outputs.yes == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ${{ matrix.dir }}/requirements*.txt
+      - name: Install
+        if: steps.has.outputs.yes == 'true'
+        run: pip install -r ${{ matrix.dir }}/requirements.txt ruff pytest
+      - name: Lint (ruff)
+        if: steps.has.outputs.yes == 'true'
+        run: ruff check ${{ matrix.dir }}
+      - name: Test (pytest)
+        if: steps.has.outputs.yes == 'true'
+        working-directory: ${{ matrix.dir }}
+        run: |
+          pytest -q || { code=$?; [ $code -eq 5 ] && echo "No tests collected yet." && exit 0; exit $code; }
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Folder present?
+        id: has
+        run: |
+          if [ -f frontend/package-lock.json ]; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "No frontend/package-lock.json yet; skipping."; fi
+      - uses: actions/setup-node@v4
+        if: steps.has.outputs.yes == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install, lint, type-check, test, build
+        if: steps.has.outputs.yes == 'true'
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint --if-present
+          npm run typecheck --if-present
+          npm run test --if-present
+          npm run build
+
+  api-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint the OpenAPI contract
+        run: |
+          if [ ! -f docs/architecture/openapi.yaml ]; then echo "No contract yet; skipping."; exit 0; fi
+          npx --yes @redocly/cli@1.25.0 lint docs/architecture/openapi.yaml --format=github-actions
