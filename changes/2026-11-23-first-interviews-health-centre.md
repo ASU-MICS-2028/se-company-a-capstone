@@ -22,8 +22,8 @@ Added anonymised notes for P01 (a patient) and S01 (a nurse) in `docs/ux/researc
 
 | Person | Part |
 |---|---|
-| Joseph Etse | Interviewed both, with the team below |
-| Liza Aikins, Henry Kofi Brandoh, Kobina Opei Jr. | Interviewed both, with Joseph |
+| Joseph Etse, Liza Aikins | Interviewed the nurse (S01) |
+| Henry Kofi Brandoh, Kobina Opei Jr. | Interviewed the patient (P01) |
 
 ## AI use
 

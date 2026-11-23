@@ -2,7 +2,7 @@
 
 **Who:** a nurse with 5 years at this health centre. She worked at a regional hospital before.
 **Where:** a community health centre in Greater Accra, with two nurses on duty and one patient present.
-**How:** in person, in English and Twi, about 11 minutes. Recorded with consent asked before recording; transcribed by an AI tool. The audio is deleted once these notes are merged. Interviewed by Joseph Etse, Liza Aikins, Henry Kofi Brandoh and Kobina Opei Jr.
+**How:** in person, in English and Twi, about 11 minutes. Recorded with consent asked before recording; transcribed by an AI tool. The audio is deleted once these notes are merged. Interviewed by Joseph Etse and Liza Aikins.
 **Removed from these notes:** her name and her contact details (kept privately by the team for follow-up only).
 
 ## How the facility works
