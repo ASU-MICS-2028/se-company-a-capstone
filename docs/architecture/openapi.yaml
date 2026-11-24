@@ -16,7 +16,7 @@ info:
     - Every state change appends an event to the clinic's event log. The board polls `GET /clinics/{clinicId}/events?after=`.
     - Errors use `application/problem+json` (RFC 9457).
     - Staff endpoints need a bearer token with the `staff` role. The USSD and SMS callbacks are authenticated by a shared secret in the URL path, configured with the gateway.
-    - The two patient web endpoints (tag `patient`) need no login. They are rate-limited and answer 429 with `Retry-After` when a client goes over. The limits live in backend configuration (#50), not in this contract, so tuning them is not a contract change.
+    - The two patient web endpoints (tag `patient`) need no login. They are rate-limited and answer 429 with `Retry-After` when a client goes over. The limits live in backend configuration (#59), not in this contract, so tuning them is not a contract change.
 
     **Safe to repeat.** Clinics have weak networks, so every staff write can be retried without harm:
     - Every staff write accepts an `Idempotency-Key` header. Repeating a key with the same request returns the first response. Reusing a key for a different request returns 422. Keys are kept for 24 hours.
@@ -372,7 +372,7 @@ paths:
         and gets the "come now" SMS when its turn nears. Its `joined` event has `actor: patient` and `actorId: null`.
         The phone number never goes into an event.
 
-        **The phone number is not verified** here, unlike USSD, where the network supplies it. So:
+        **The phone number is not verified** here ([decision](../../decisions/2026-11-24-treat-web-phone-numbers-as-unverified.md)), unlike USSD, where the network supplies it. So:
         - If the number already has an active ticket, the answer is 409 and says nothing about that ticket. The
           patient finds it by USSD ("Check my ticket"), which proves they hold the phone.
         - A reply lost on a weak network is recovered with `Idempotency-Key`: the page makes one key per form
@@ -532,7 +532,7 @@ components:
       name: Idempotency-Key
       in: header
       required: false
-      description: Any unique string, such as a UUID made by the board. Repeating it with the same request returns the first response instead of acting twice. Reusing it for a different request returns 422. Kept for 24 hours.
+      description: Any unique string, such as a UUID made by the board or the patient page. Repeating it with the same request returns the first response instead of acting twice. Reusing it for a different request returns 422. Kept for 24 hours.
       schema: { type: string, maxLength: 128 }
 
   responses:
