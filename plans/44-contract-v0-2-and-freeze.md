@@ -28,7 +28,7 @@ Turn Joseph's draft (#43) into a contract that backend (#8), frontend (#10) and 
 - [x] Ticket code format stated, with a daily counter per clinic.
 - [x] USSD replies have a stated length limit.
 - [x] Redocly passes with no warnings (two deliberate ignores in `.redocly.lint-ignore.yaml`).
-- [ ] Callback-secret risk raised on #11.
+- [x] Callback-secret risk raised on #11.
 - [ ] Reviewed by Kobina, Henry and Joseph, then the freeze decision set to accepted.
 
 ## Inputs and outputs
