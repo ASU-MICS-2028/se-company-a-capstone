@@ -2,7 +2,7 @@
 title: License the repo under MIT
 date: 2026-11-24
 status: proposed
-deciders: Nyansapo Systems team (agreed in the team chat, 24 Nov), Eric Sunu (#7)
+deciders: Eric Sunu (#7). Suggested by a teammate in the team chat on 24 Nov; the team confirms it by reviewing PR #61
 issue: "#60"
 ai_used: yes
 ---

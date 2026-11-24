@@ -17,7 +17,7 @@ ai_used: yes
 
 ## Why
 
-The repo is public but had no licence, so nobody could legally reuse it. The team agreed MIT during the review of contract v0.2 (PR #55).
+The repo is public but had no licence, so nobody could legally reuse it. A teammate suggested MIT in the team chat during the review of contract v0.2 (PR #55). The team confirms it by reviewing this PR.
 
 ## Who did what
 
