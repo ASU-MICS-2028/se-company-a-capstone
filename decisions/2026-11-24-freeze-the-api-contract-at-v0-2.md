@@ -33,4 +33,4 @@ When Kobina, Henry and Joseph approve the v0.2 pull request, the contract is fro
 
 ## AI use
 
-Claude Code drafted this record. Eric set the rule; the three reviewers confirm it by approving the pull request.
+Claude Code drafted this record and proposed the freeze rule. Eric has not yet reviewed it; he confirms it when he checks the pull request, and the three reviewers confirm it by approving.

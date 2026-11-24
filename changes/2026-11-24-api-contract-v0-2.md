@@ -36,7 +36,7 @@ Eric's review of #43 found that the draft would call patients who are still trav
 | Person | Part |
 |---|---|
 | Joseph Etse | v0.1 draft: structure, endpoints, schemas |
-| Eric Sunu | Review of v0.1, the v0.2 design choices, final check |
+| Eric Sunu | Review of v0.1 (state order, polling, callback secret, predictor port, and the seven gaps v0.2 closes). Final check of v0.2: not yet done |
 
 ## AI use
 

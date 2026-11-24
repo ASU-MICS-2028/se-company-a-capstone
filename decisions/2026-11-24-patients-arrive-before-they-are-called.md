@@ -34,4 +34,4 @@ The v0.1 draft (#43) had the states `waiting → notified → called → arrived
 
 ## AI use
 
-Claude Code drafted this record from Eric's review notes on #43 and the proposal's use case. Eric chose the state order during review planning.
+Claude Code drafted this record from Eric's review notes on #43 and the proposal's use case. Eric chose the state order during review planning. The hold window formula and `waitOffSite` are Claude Code's proposals, which Eric has not yet reviewed.
