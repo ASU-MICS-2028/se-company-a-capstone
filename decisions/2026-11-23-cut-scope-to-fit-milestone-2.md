@@ -23,7 +23,7 @@ ai_used: yes
 
 ## Decision
 
-One clinic, one queue, a working demo by 10 December. Everything else is ranked behind it.
+One clinic, one queue, a working demo by 10 December. Patients join by USSD, by a web page or at the desk. Everything else is ranked behind it.
 
 | | Item | Change from the proposal | Why |
 |---|---|---|---|
@@ -32,6 +32,7 @@ One clinic, one queue, a working demo by 10 December. Everything else is ranked 
 | | **Staff board v1, online**: call next, mark no-show, staff priority override (logged) | Offline moved to Should | Offline sync is the most expensive Must. Overrides also cover emergencies (F4). |
 | | **Predicted wait shown as a range**, from the M/M/c and naive baselines, served by the API | Same | The demo works even if the learned model is late. |
 | | **Gradient-boosting model evaluated offline** against both baselines (MAE, share within ±15 min) on synthetic data | Training and evaluation stay Must. **Serving the model live** moves to Should. | The research question needs the comparison, not live serving. |
+| | **Ticket from a web page**: phone number and travel band in, ticket code and status page out. Same queue as USSD and desk tickets. | Kept from the proposal (team decision, 24 Nov) | Smartphone users and companions can join without dialling. It is one small page on the same API, not a second app. |
 | | **Synthetic data generator**, validated against published figures, with weekday and month effects | Same, plus F6 | Everything else depends on it. |
 | | **Travel time chosen by the patient** in the USSD menu (e.g. under 15 min / 15–30 / 30–60 / over 1 h), plus a fixed buffer | **New, simpler** than learned timing | F2: transport availability, not distance, decides travel time. The patient knows it best. |
 | **Should** (11–14 Dec if time) | **Service status today**: staff set "prescriber in or away" in one step, shown in USSD and SMS | **New** (F1) | Both interviews raised it, and it's small. |
@@ -41,7 +42,7 @@ One clinic, one queue, a working demo by 10 December. Everything else is ranked 
 | | Fault-injection test (SMS provider down, network down) | Same | Feeds the paper's measured availability |
 | **Could** | Learned travel time (EWMA from SMS to check-in) | Moved down from Should | The patient-chosen band covers the demo |
 | | Administrator daily wait report | Moved down from Should | The survey (C) will show whether anyone wants it |
-| **Won't** | Joining from the web, WhatsApp bot, more than one clinic, real handsets, patient accounts | **Newly explicit** | Each is a second build of something the Musts already cover |
+| **Won't** | WhatsApp bot, more than one clinic, real handsets, patient accounts | **Newly explicit** | WhatsApp needs mobile data and Meta business approval; the rest are second builds of what the Musts cover |
 | | Diagnosis or triage AI, real patient data or a live pilot, lab and pharmacy stages, EMR or NHIS integration, payments | Same | Same reasons as the proposal |
 
 **Sprint mapping:**
@@ -58,11 +59,11 @@ One clinic, one queue, a working demo by 10 December. Everything else is ranked 
 
 ## Consequences
 
-- Eric freezes the API contract (#7) on this scope. Kobina's frontend (#10) needs only the staff board and no patient web screens. USSD is a backend endpoint (#8).
+- Eric freezes the API contract (#7) on this scope. Kobina's frontend (#10) is the staff board plus one patient web page (join, then a ticket status page). USSD is a backend endpoint (#8).
 - Henry's work (#9) gets a clear finish line: an offline evaluation. Serving the model live comes afterwards.
 - The paper says plainly what was built, what ran in a sandbox and what was left out. That is the scope control the rubric asks for.
 - **Review on 27 Nov**, after the survey closes. Two things to check:
-  1. If Survey A shows most respondents use smartphones, ask the Product Owner whether joining from the web should move up from Won't.
+  1. Survey A question 4 (phone type) shows how many patients the web page and USSD each reach. Report the split in the paper.
   2. If many respondents would not act on a text (A5), discuss the core idea before Sprint 3.
 - Once the Product Owner agrees, set the status to "accepted".
 
