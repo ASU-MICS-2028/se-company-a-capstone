@@ -29,6 +29,7 @@ Turn Joseph's draft (#43) into a contract that backend (#8), frontend (#10) and 
 - [x] USSD replies have a stated length limit.
 - [x] Redocly passes with no warnings (two deliberate ignores in `.redocly.lint-ignore.yaml`).
 - [x] Callback-secret risk raised on #11.
+- [x] Web booking (#58): `web` channel, a public join and a public ticket-status read, both rate-limited.
 - [ ] Reviewed by Kobina, Henry and Joseph, then the freeze decision set to accepted.
 
 ## Inputs and outputs
@@ -51,3 +52,4 @@ Turn Joseph's draft (#43) into a contract that backend (#8), frontend (#10) and 
 ## Log
 
 - 2026-11-24: v0.2 written and linted; PR opened for review.
+- 2026-11-24: #43 merged, so the PR now targets `main`. Web booking added after #58.

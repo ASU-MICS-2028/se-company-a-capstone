@@ -2,19 +2,21 @@ openapi: 3.1.0
 info:
   title: Twɛn Queue API
   version: 0.2.0
-  summary: Virtual OPD queue for one clinic. USSD and desk tickets, a staff board, and "come now" SMS.
+  summary: Virtual OPD queue for one clinic. USSD, web and desk tickets, a staff board, and "come now" SMS.
   description: |
     **Status:** v0.2 (#44). It is frozen once Kobina (#10), Henry (#9) and Joseph (#12) approve its pull request.
     After that, any change needs a `decisions/` file and a version bump. It follows the proposed scope cut
-    (decisions/2026-11-23-cut-scope-to-fit-milestone-2.md): one clinic, USSD and desk tickets,
-    an online staff board, an SMS outbox, and predicted waits from the baselines.
+    (decisions/2026-11-23-cut-scope-to-fit-milestone-2.md, with web booking kept by #58): one clinic, USSD, web
+    and desk tickets, an online staff board, an SMS outbox, and predicted waits from the baselines.
 
     **Conventions**
     - Times are ISO 8601 in UTC. Durations are whole minutes.
     - Phone numbers are accepted in E.164 format, stored as given, and never returned in full. Responses carry `phoneMasked`.
+    - A phone number has at most one active ticket (`waiting`, `notified`, `arrived` or `called`) per clinic, whichever channel issued it. So the USSD menu's "Check my ticket" also finds a web or desk ticket.
     - Every state change appends an event to the clinic's event log. The board polls `GET /clinics/{clinicId}/events?after=`.
     - Errors use `application/problem+json` (RFC 9457).
     - Staff endpoints need a bearer token with the `staff` role. The USSD and SMS callbacks are authenticated by a shared secret in the URL path, configured with the gateway.
+    - The two patient web endpoints (tag `patient`) need no login. They are rate-limited and answer 429 with `Retry-After` when a client goes over. The limits live in backend configuration (#50), not in this contract, so tuning them is not a contract change.
 
     **Safe to repeat.** Clinics have weak networks, so every staff write can be retried without harm:
     - Every staff write accepts an `Idempotency-Key` header. Repeating a key with the same request returns the first response. Reusing a key for a different request returns 422. Keys are kept for 24 hours.
@@ -38,6 +40,8 @@ tags:
     description: Callbacks from the USSD and SMS provider (Africa's Talking sandbox)
   - name: clinic
     description: Clinic settings and service status
+  - name: patient
+    description: The patient's web page, with no login. Join the queue, then follow the ticket.
 
 paths:
   /health:
@@ -142,8 +146,9 @@ paths:
       operationId: createTicket
       summary: Issue a ticket at the desk
       description: |
-        Used by staff for a patient at the desk, including patients with no phone. USSD tickets are created through `/gateway/ussd`.
-        Desk and USSD tickets join one queue in the order they are issued (fairness, proposal §9).
+        Used by staff for a patient at the desk, including patients with no phone. USSD tickets are created through
+        `/gateway/ussd` and web tickets through `/clinics/{clinicId}/web-tickets`. All three join one queue in the
+        order they are issued (fairness, proposal §9).
 
         A desk ticket starts as `arrived`, because the patient is standing at the desk. If the patient has a phone and
         wants to leave and come back, staff set `waitOffSite: true` with a travel band: the ticket then starts as
@@ -165,6 +170,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Ticket" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/PhoneHasTicket" }
         "422": { $ref: "#/components/responses/Invalid" }
 
   /clinics/{clinicId}/queue:
@@ -355,6 +361,65 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
 
+  /clinics/{clinicId}/web-tickets:
+    parameters: [ { $ref: "#/components/parameters/clinicId" } ]
+    post:
+      tags: [patient]
+      operationId: joinFromWeb
+      summary: Join the queue from the patient web page
+      description: |
+        No login. The ticket behaves like a USSD ticket: it starts as `waiting`, takes its place in the same queue,
+        and gets the "come now" SMS when its turn nears. Its `joined` event has `actor: patient` and `actorId: null`.
+        The phone number never goes into an event.
+
+        **The phone number is not verified** here, unlike USSD, where the network supplies it. So:
+        - If the number already has an active ticket, the answer is 409 and says nothing about that ticket. The
+          patient finds it by USSD ("Check my ticket"), which proves they hold the phone.
+        - A reply lost on a weak network is recovered with `Idempotency-Key`: the page makes one key per form
+          submission and reuses it when retrying, so the retry returns the same ticket instead of 409.
+
+        The response carries the ticket `id`, which the page puts in its status link (`GET /web-tickets/{ticketId}`).
+      security: []
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebTicketInput" }
+            example: { phone: "+233244000111", travelBand: "30_60", language: tw }
+      responses:
+        "201":
+          description: Ticket issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTicket" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/PhoneHasTicket" }
+        "422": { $ref: "#/components/responses/Invalid" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /web-tickets/{ticketId}:
+    parameters: [ { $ref: "#/components/parameters/ticketId" } ]
+    get:
+      tags: [patient]
+      operationId: getWebTicket
+      summary: The patient's view of a web ticket, for the status page to poll
+      description: |
+        No login. The ticket `id` is a random UUID (version 4, never sequential) and works as the key to this page:
+        anyone with the link sees the fields of `PublicTicket` and nothing else (no full phone, no events, no other
+        patients). Ids of USSD and desk tickets return 404, so only web tickets have a public page.
+
+        The page polls at most every 30 seconds; the wait range changes slowly.
+      security: []
+      responses:
+        "200":
+          description: The ticket, as the patient sees it
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTicket" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
   /gateway/{secret}/ussd:
     parameters: [ { $ref: "#/components/parameters/gatewaySecret" } ]
     post:
@@ -492,6 +557,21 @@ components:
         application/problem+json:
           schema: { $ref: "#/components/schemas/Problem" }
           example: { type: "about:blank", title: Invalid transition, status: 409, detail: "Ticket B-047 is 'seen'; cannot mark no-show." }
+    PhoneHasTicket:
+      description: This phone number already has an active ticket at this clinic. The reply does not say which one.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+          example: { type: "about:blank", title: Phone already has a ticket, status: 409, detail: "This number is already in the queue. Dial the USSD code and choose Check my ticket." }
+    TooManyRequests:
+      description: Too many requests from this client. Try again after `Retry-After` seconds.
+      headers:
+        Retry-After:
+          description: Seconds to wait before trying again
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
     Invalid:
       description: Validation failed, or an `Idempotency-Key` was reused for a different request
       content:
@@ -561,7 +641,7 @@ components:
           description: Short code read aloud and shown on SMS. Unique within one clinic and one day (see "Ticket codes").
           examples: ["B-047"]
         clinicId: { type: string }
-        channel: { type: string, enum: [ussd, desk] }
+        channel: { type: string, enum: [ussd, web, desk] }
         status: { $ref: "#/components/schemas/TicketStatus" }
         position:
           type: [integer, "null"]
@@ -610,6 +690,39 @@ components:
         calledAt: null
         closedAt: null
         overridden: false
+
+    PublicTicket:
+      type: object
+      description: What the patient's web page may see. A subset of `Ticket`, and each field means the same as there.
+      required: [id, code, status, position, predictedWait, holdUntil, phoneMasked]
+      properties:
+        id: { type: string, format: uuid, description: "Also the key to the status page, so the link should stay private." }
+        code: { $ref: "#/components/schemas/Ticket/properties/code" }
+        status: { $ref: "#/components/schemas/TicketStatus" }
+        position: { $ref: "#/components/schemas/Ticket/properties/position" }
+        predictedWait: { $ref: "#/components/schemas/Ticket/properties/predictedWait" }
+        holdUntil: { $ref: "#/components/schemas/Ticket/properties/holdUntil" }
+        phoneMasked: { type: string, examples: ["+233 24*****11"] }
+      example:
+        id: 8b2e4f10-1c7d-4a9e-b3f2-5d6a7e8c9f01
+        code: B-052
+        status: waiting
+        position: 18
+        predictedWait: { lowMinutes: 70, highMinutes: 95, expectedFrom: "2026-11-30T10:05:00Z", expectedTo: "2026-11-30T10:30:00Z", method: mmc }
+        holdUntil: null
+        phoneMasked: "+233 24*****11"
+
+    WebTicketInput:
+      type: object
+      required: [phone, travelBand, language]
+      additionalProperties: false
+      properties:
+        phone: { type: string, pattern: "^\\+[1-9][0-9]{7,14}$", description: "E.164. Not verified (see joinFromWeb)." }
+        travelBand:
+          type: string
+          enum: [under_15, "15_30", "30_60", over_60]
+          description: The same bands as `TravelBand`, but required, so the hold window can be set.
+        language: { $ref: "#/components/schemas/Language" }
 
     DeskTicketInput:
       type: object
@@ -662,7 +775,7 @@ components:
         name: { type: string }
         ticketPrefix: { type: string, pattern: "^[A-Z]$", description: The letter that starts this clinic's ticket codes }
         staffOnDuty: { type: integer, minimum: 0, description: The c in M/M/c. Set with PATCH. }
-        graceMinutes: { type: integer, minimum: 0, description: Added to the travel band to set `holdUntil`. Set with PATCH. }
+        graceMinutes: { type: integer, minimum: 0, description: Added to the travel band to set `holdUntil`. Set with PATCH. A new clinic starts at 20. }
         meanServiceMinutes: { type: number, minimum: 0, description: A rolling mean of recent consultations }
         waitingCount: { type: integer, minimum: 0 }
         status:

@@ -23,19 +23,21 @@ ai_used: yes
 - **Ticket codes** have a stated format and a daily counter.
 - **USSD replies** have a 160-character limit, menus use GSM-safe text, and patients can cancel by USSD.
 - **Gateway secret** must never reach a log.
+- **Web booking** ([#58](https://github.com/ASU-MICS-2028/se-company-a-capstone/pull/58)): a `web` channel, a public join (`POST /clinics/{clinicId}/web-tickets`) and a public status read for the patient page (`GET /web-tickets/{ticketId}`), both rate-limited. One active ticket per phone, whichever channel issued it.
+- **Grace window:** a new clinic's `graceMinutes` starts at 20.
 - **Lint:** no warnings. Two deliberate ignores, each with its reason, in `.redocly.lint-ignore.yaml`.
 
 Also two decisions (arrival before calling; freezing at v0.2) and one learning (the GSM alphabet).
 
 ## Why
 
-Eric's review of #43 found that the draft would call patients who are still travelling, and that it had no way to set staff on duty, show SMS failures, or attribute overrides. See [#44](https://github.com/ASU-MICS-2028/se-company-a-capstone/issues/44) and the [arrival decision](../decisions/2026-11-24-patients-arrive-before-they-are-called.md).
+Eric's review of #43 found that the draft would call patients who are still travelling, and that it had no way to set staff on duty, show SMS failures, or attribute overrides. See [#44](https://github.com/ASU-MICS-2028/se-company-a-capstone/issues/44) and the [arrival decision](../decisions/2026-11-24-patients-arrive-before-they-are-called.md). Web booking came back as a Must in #58 (team decision, 24 Nov), so the contract needed a public way in.
 
 ## Who did what
 
 | Person | Part |
 |---|---|
-| Joseph Etse | v0.1 draft: structure, endpoints, schemas |
+| Joseph Etse | v0.1 draft: structure, endpoints, schemas. The web booking scope change (#58) and the outline of its two endpoints |
 | Eric Sunu | Review of v0.1 (state order, polling, callback secret, predictor port, and the seven gaps v0.2 closes). Final check of v0.2: not yet done |
 
 ## AI use
@@ -43,6 +45,7 @@ Eric's review of #43 found that the draft would call patients who are still trav
 | Part of the change | Tool | What the AI did | What a person checked or changed |
 |---|---|---|---|
 | v0.2 edits to `openapi.yaml` | Claude Code | Applied Eric's review points, wrote the state table, hold window, SMS mapping and repeat rules, and ran Redocly | not yet checked |
+| Web booking endpoints | Claude Code | Wrote both endpoints from Joseph's outline. Chose: a 409 that reveals nothing about the existing ticket, `Idempotency-Key` on the join, 404 for non-web ids on the public read, and rate limits kept out of the contract | not yet checked |
 | Decision and learning files | Claude Code | Drafted them from Eric's review notes and the proposal | not yet checked |
 
 ## How to check it
