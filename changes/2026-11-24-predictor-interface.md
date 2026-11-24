@@ -22,7 +22,7 @@ New file `docs/architecture/predictor-interface.md`. It defines the one port the
 
 | Person | Part |
 |---|---|
-| Eric Sunu | The port's shape, inputs and budget, from his review of #43 |
+| Eric Sunu | The port's shape, inputs, budget and fallback, from his review notes on #43. The model-file format and the `PREDICTOR` setting are Claude Code's proposals. Final check: not yet done |
 | Henry Kofi Brandoh | Reviews it and answers the four questions |
 
 ## AI use
