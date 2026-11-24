@@ -4,7 +4,7 @@ date: 2026-11-24
 owner: Eric Sunu
 contributors: none
 issue: "#60"
-pr: "#<PR number, once open>"
+pr: "#61"
 ai_used: yes
 ---
 
