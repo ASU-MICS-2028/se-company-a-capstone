@@ -27,7 +27,7 @@ Four new decision files, all marked proposed until the team agrees:
 
 | Person | Part |
 |---|---|
-| Eric Sunu | The stack review and the choices these records capture |
+| Eric Sunu | The stack review these records come from (sync FastAPI, PostgreSQL, a separate worker, deciding hosting now). Dropping the database port, the fixed-address tunnel and the host candidates are Claude Code's proposals. Final check: not yet done |
 | The team | Reviews and agrees, or proposes changes |
 
 ## AI use
