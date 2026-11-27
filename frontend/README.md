@@ -29,6 +29,17 @@ npm run build      # production build into dist/
 | `src/styles/tokens.css` | Every colour, font and corner from the approved prototypes. Change the look here, once. |
 | `src/styles/base.css` | Page basics and the keyboard focus ring |
 | `src/fonts.ts` | Fonts bundled with the app (no Google Fonts call), so it works offline |
+| `src/api/client.ts` | **The one place screens get data from.** Today it uses the mock. Swapping to Eric's backend means changing this file only. |
+| `src/api/mock.ts`, `src/api/mockData.ts` | An in-memory stand-in for the backend, answering the way the contract says, with made-up tickets |
+| `src/api/schema.d.ts` | Types generated from `docs/architecture/openapi.yaml`. Never edit by hand: run `npm run gen:api`. |
+| `src/staff/` | The staff board: the live queue screen, status words and filters |
+
+## The API contract
+
+The mock follows contract **v0.2** (PR #55). Until #55 is merged, `main` still has v0.1, so:
+
+- `src/api/schema.d.ts` was generated from the v0.2 file. Don't run `npm run gen:api` on `main` before #55 merges, or you get v0.1 types back.
+- The contract test (`src/api/__tests__/contract.test.ts`) checks every mock ticket against the contract's schemas. It skips itself while `main` has v0.1. To run it against another copy of the contract: `TWEN_CONTRACT=/path/to/openapi.yaml npm test`.
 
 ## Design source
 
