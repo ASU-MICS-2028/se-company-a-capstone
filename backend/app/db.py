@@ -19,5 +19,5 @@ def database_url(raw: str | None = None) -> URL:
 
 
 # pool_pre_ping: test a pooled connection before use, so a database restart doesn't break the next request.
-# ponytail: connect_timeout=2 s keeps /health quick when the database is gone; raise it if a remote host is slow to connect.
+# connect_timeout=2 s keeps /health quick when the database is gone. Raise it if a remote host is slow to connect.
 engine = create_engine(database_url(), pool_pre_ping=True, connect_args={"connect_timeout": 2})

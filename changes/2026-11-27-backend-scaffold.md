@@ -29,7 +29,7 @@ Sprint 2 backlog item 6 and issue #49: a walking skeleton, so each later endpoin
 
 ## A question for the contract (PR #55)
 
-`/health` is the same in v0.1 and v0.2; v0.2 only adds a description. The contract's 503 ("Database unreachable") has no body, but the 200 body lists `down` as a value of `database`. The app sends the health body with the 503, with `database` set to `down`. Proposal for the v0.2 review: give the 503 the same schema, or drop `down` from the 200. `openapi.yaml` is not edited here, because PR #55 is changing it.
+`/health` is the same in v0.1 and v0.2; v0.2 only adds a description. The contract's 503 ("Database unreachable") has no body, but the 200 body lists `down` as a value of `database`. The app sends the health body with the 503, with `database` set to `down`. Options for the v0.2 review: give the 503 the same schema, drop `down` from the 200, or make the 503 an `application/problem+json` error like the contract's other errors. `openapi.yaml` is not edited here, because PR #55 is changing it.
 
 ## Who did what
 

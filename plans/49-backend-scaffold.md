@@ -23,7 +23,7 @@ It is Sprint 2 backlog item 6 (`docs/scrum/sprint-2-backlog.md`). Rubric: Functi
 - [x] Docker Compose runs PostgreSQL 16 locally, with `DATABASE_URL` as in CI.
 - [x] Alembic set up, with a first migration.
 - [x] `GET /health` returns the contract's shape, including when the database is down.
-- [ ] pytest and ruff pass locally and in CI.
+- [x] pytest and ruff pass locally and in CI.
 - [x] A test fails if the app serves a route the contract doesn't list (contract drift).
 - [x] `backend/README.md`: how to run and test it.
 
@@ -49,4 +49,4 @@ It is Sprint 2 backlog item 6 (`docs/scrum/sprint-2-backlog.md`). Rubric: Functi
 
 ## Log
 
-- 2026-11-27: Plan created. Scaffold built and tested locally; PR opened.
+- 2026-11-27: Plan created. Scaffold built and tested locally; PR #65 opened; CI green (4 tests passed).

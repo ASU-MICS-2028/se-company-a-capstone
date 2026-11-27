@@ -13,7 +13,7 @@ if context.config.config_file_name is not None:
 # #50 sets this to the tables' MetaData, so `alembic revision --autogenerate` can compare them.
 target_metadata = None
 
-# ponytail: online mode only (no `--sql` scripts); add offline mode if we ever need SQL files to review.
+# Simplification: online mode only (no `alembic upgrade --sql` scripts). Add offline mode if we need SQL files to review.
 with engine.connect() as connection:
     context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
