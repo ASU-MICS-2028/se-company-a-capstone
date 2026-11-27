@@ -1,0 +1,11 @@
+# Everything the backend and its tests need. CI installs this file plus ruff and pytest.
+fastapi==0.165.0
+uvicorn==0.54.0
+SQLAlchemy==2.1.9
+psycopg[binary]==3.3.9
+alembic==1.20.1
+
+# Used only by the tests. FastAPI's TestClient needs httpx2 (plain httpx is deprecated there),
+# and the contract test reads openapi.yaml with PyYAML.
+httpx2==2.16.2
+PyYAML==6.0.4

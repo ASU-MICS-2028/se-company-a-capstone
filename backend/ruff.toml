@@ -1,0 +1,4 @@
+# CI runs `ruff check backend` from the repo root. This file makes backend/ the project root,
+# so ruff sees `app` as our own package (imports sort it last) and checks for CI's Python, 3.12.
+src = ["."]
+target-version = "py312"
