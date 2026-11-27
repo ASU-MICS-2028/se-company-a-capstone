@@ -17,7 +17,7 @@ ai_used: yes
 
 ## Why
 
-The repo is public but had no licence, so nobody could legally reuse it. A teammate suggested MIT in the team chat during the review of contract v0.2 (PR #55). The team confirms it by reviewing this PR.
+The repo is public but had no licence, so nobody could legally reuse it. Joseph proposed MIT in [his review comment on PR #55](https://github.com/ASU-MICS-2028/se-company-a-capstone/pull/55#issuecomment-7158895769) (25 Nov). The team confirms it by reviewing this PR.
 
 ## Who did what
 

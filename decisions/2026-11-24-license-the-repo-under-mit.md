@@ -2,7 +2,7 @@
 title: License the repo under MIT
 date: 2026-11-24
 status: proposed
-deciders: Eric Sunu (#7). Suggested by a teammate in the team chat on 24 Nov; the team confirms it by reviewing PR #61
+deciders: Eric Sunu (#7) and Joseph Etse, who proposed MIT in his review comment on PR #55 (25 Nov); the team confirms it by reviewing PR #61
 issue: "#60"
 ai_used: yes
 ---
