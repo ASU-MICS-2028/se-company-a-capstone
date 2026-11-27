@@ -437,6 +437,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Health: {
+            /**
+             * @description Always ok when the process answers
+             * @enum {string}
+             */
+            status: "ok";
+            /** @enum {string} */
+            database: "ok" | "down";
+        };
         /**
          * @description The normal path is `waiting → notified → arrived → called → seen`. A patient must arrive before being called.
          *
@@ -796,7 +805,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Up */
+            /** @description Up, and the database answers */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -806,20 +815,21 @@ export interface operations {
                      *       "status": "ok",
                      *       "database": "ok"
                      *     } */
-                    "application/json": {
-                        /** @enum {string} */
-                        status: "ok";
-                        /** @enum {string} */
-                        database: "ok" | "down";
-                    };
+                    "application/json": components["schemas"]["Health"];
                 };
             };
-            /** @description Database unreachable */
+            /** @description The process is up but the database is unreachable. Same body, so monitoring can tell the two apart. */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    /** @example {
+                     *       "status": "ok",
+                     *       "database": "down"
+                     *     } */
+                    "application/json": components["schemas"]["Health"];
+                };
             };
         };
     };
