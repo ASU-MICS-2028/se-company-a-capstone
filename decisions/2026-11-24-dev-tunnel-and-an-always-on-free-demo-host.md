@@ -21,7 +21,7 @@ ai_used: yes
 
 - **Development:** an **ngrok** tunnel on the free plan. Each free account gets one fixed dev domain, so we register the callback URL with the Africa's Talking sandbox once. Only Africa's Talking callbacks go through the tunnel; the board and patient page run on localhost, because the free plan allows 20,000 HTTP requests a month and the board polls.
 - **Demo host:** an **Oracle Cloud Always Free** Arm virtual machine (shape `VM.Standard.A1.Flex`) running our Docker Compose file: the API, the outbox worker and PostgreSQL 16 on one machine. A VM does not sleep, the Always Free allowance has no end date, and it is far larger than we need (2 OCPUs and 12 GB of memory, 200 GB of disk, 10 TB a month of outbound data).
-- **HTTPS on the VM:** a reverse proxy in front of the API with a Let's Encrypt certificate for the VM's public IP address. Let's Encrypt has issued six-day certificates for IP addresses since January 2026, so we need no domain name. A free hostname (DuckDNS or sslip.io) is the second route.
+- **HTTPS on the VM:** a reverse proxy in front of the API with a Let's Encrypt certificate for the VM's public IP address. Let's Encrypt made six-day certificates for IP addresses generally available in January 2026, so we need no domain name. A free hostname (DuckDNS or sslip.io) is the second route.
 - **Fallback:** if nobody on the team can open an Oracle account by 30 Nov (the card is refused, or there is no Arm capacity), use **Azure for Students**: a small Linux VM paid from the $100 student credit, running the same Compose file. It needs a school email and no card, so it covers Oracle's main risk.
 - **Database:** no hosted database while the VM runs PostgreSQL. If the fallback VM is too small for it, use Supabase's free database through its IPv4 pooler, as a plain PostgreSQL server only. Not Neon (see the evidence).
 
@@ -40,8 +40,8 @@ ai_used: yes
 
 | Database or tunnel | Fits? | Why |
 |---|---|---|
-| Neon free | No | 100 compute-hours a month runs the smallest size for 400 hours. Our worker polls every 1 to 2 s, so the database never scales to zero and the allowance runs out around day 17 (our arithmetic); compute then stops until next month. |
-| Supabase free | Yes, as the fallback database only | 500 MB, shared CPU and 500 MB of RAM; paused only after a week of low activity; on the free plan, IPv4 clients connect through the shared pooler. |
+| Neon free | No | 100 compute-hours a month runs the smallest size for 400 hours. Our worker polls every 1 to 2 s, so the database never scales to zero and the allowance runs out around day 17 (our arithmetic); compute then stops until next month. No card needed. |
+| Supabase free | Yes, as the fallback database only | 500 MB, shared CPU and 500 MB of RAM; paused only after a week of low activity; on the free plan, IPv4 clients connect through the shared pooler. Card: not stated on the pages read. |
 | ngrok free | Yes, for development | One fixed dev domain we can't rename; 20,000 HTTP requests and 1 GB out a month; the browser warning page appears only for GET requests from browsers, so Africa's Talking's POST callbacks pass. No card for HTTP tunnels. |
 
 The Oracle idle rule: Oracle may reclaim an Always Free instance if, over 7 days, CPU (95th percentile), network and memory are **all** under 20% (memory counts for Arm shapes only). A quiet demo could meet the CPU and network parts, so we keep memory use above 20% (see Consequences).
@@ -82,7 +82,7 @@ Sources, all checked 27 Nov 2026:
 
 - One teammate tries to open the Oracle account **before 30 Nov**. Oracle allows one free account per person, so the account belongs to that teammate. If it fails, we switch to the Azure fallback the same day.
 - #49's Compose file runs unchanged on the VM. The Arm shape needs an `arm64` build of every image, which #49 checks.
-- Size the Arm VM small (for example 1 OCPU and 4 GB), so normal use stays above 20% of memory, and check the memory metric after the first week.
+- Size the Arm VM small (for example 1 OCPU and 4 GB), so normal use stays above 20% of memory, and check the memory metric within the first two days, well inside Oracle's 7-day window.
 - Someone logs in to the Oracle console at least monthly: the FAQ says accounts idle for 30 days or more may be treated as abandoned.
 - In development, only Africa's Talking callbacks use the tunnel, which keeps us under ngrok's monthly request limit.
 - #48's deployment view names Oracle Cloud (or the fallback, if we switch).
