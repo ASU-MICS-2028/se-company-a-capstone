@@ -13,12 +13,15 @@
   --color-on-primary: #ffffff;
   --color-urgent: #d9480f;      /* ember: urgent, pause */
   --color-urgent-ink: #a33a0c;
+  --color-urgent-strong: #c2410c; /* white text on #d9480f is only 4.3:1, so full cards use this (5.2:1) */
   --color-urgent-wash: #fbe3d6;
   --color-ok: #0f7c6e;          /* teal: arrived, done */
   --color-ok-ink: #0b5e53;
   --color-ok-wash: #d9efe9;
   --color-accent: #5f4fb8;      /* lilac: small accents only */
   --color-accent-wash: #efeefa;
+  --color-leave-wash: #d8d6f3;  /* the "Leave home around" card */
+  --color-leave-ink: #1c1540;
   --color-tag: #ebebe8;         /* grey channel tags */
   --color-line: rgba(17, 18, 17, 0.08);
   --color-border: rgba(17, 18, 17, 0.16);

@@ -2,7 +2,7 @@
 // will, so the screens can be built and tested before the backend exists.
 import type { TwenApi } from './client'
 import { CLINIC, seedTickets, waitRange } from './mockData'
-import { ApiError, type Clinic, type OverrideInput, type QueueEvent, type Ticket, type TicketStatus } from './types'
+import { ApiError, type Clinic, type OverrideInput, type PublicTicket, type QueueEvent, type Ticket, type TicketStatus } from './types'
 
 /** The statuses `GET /queue` returns when no filter is given (contract: "all active tickets"). */
 export const ACTIVE_STATUSES: TicketStatus[] = ['waiting', 'notified', 'arrived', 'called']
@@ -35,6 +35,8 @@ export function createMockApi(options: MockOptions = {}): TwenApi {
   const tickets: Ticket[] = structuredClone(options.tickets ?? seedTickets(now()))
   const events: QueueEvent[] = []
   const answered = new Map<string, { request: string; result: unknown }>()
+  // Full phone numbers live only here, never on a ticket, as the contract says (`phoneMasked` only).
+  const phones = new Map<string, string>()
 
   const wait = () => (delayMs > 0 ? new Promise((r) => setTimeout(r, delayMs)) : Promise.resolve())
 
@@ -108,6 +110,17 @@ export function createMockApi(options: MockOptions = {}): TwenApi {
   }
 
   const stamp = () => new Date(now()).toISOString()
+
+  /** The fields the patient's page may see (contract: PublicTicket). */
+  const publicView = (t: Ticket): PublicTicket => ({
+    id: t.id,
+    code: t.code,
+    status: t.status,
+    position: t.position,
+    predictedWait: t.predictedWait,
+    holdUntil: t.holdUntil,
+    phoneMasked: t.phoneMasked ?? '',
+  })
 
   return {
     getClinic(clinicId) {
@@ -207,6 +220,54 @@ export function createMockApi(options: MockOptions = {}): TwenApi {
         log('override', t.id, { reason: input.reason, note: input.note ?? null, fromPosition, toPosition: t.position })
         return t
       })
+    },
+
+    joinFromWeb(clinicId, input, key) {
+      const missing = checkClinic(clinicId)
+      if (missing) return missing
+      return once(key, `join:${JSON.stringify(input)}`, () => {
+        if (!/^\+[1-9][0-9]{7,14}$/.test(input.phone)) throw problem(422, 'Invalid', 'The phone number must look like +233244000111.')
+        if (!['under_15', '15_30', '30_60', 'over_60'].includes(input.travelBand)) throw problem(422, 'Invalid', 'Choose how long it takes you to get here.')
+        if (input.language !== 'en' && input.language !== 'tw') throw problem(422, 'Invalid', 'Choose English or Twi.')
+        const holder = tickets.find((t) => phones.get(t.id) === input.phone && ACTIVE_STATUSES.includes(t.status))
+        if (holder) {
+          throw problem(409, 'Phone already has a ticket', 'This number is already in the queue. Dial the USSD code and choose Check my ticket.')
+        }
+        const n = tickets.length + 1
+        const t: Ticket = {
+          id: crypto.randomUUID(),
+          code: `${CLINIC.ticketPrefix}-${String(n).padStart(3, '0')}`,
+          clinicId,
+          channel: 'web',
+          status: 'waiting',
+          position: null,
+          phoneMasked: `${input.phone.slice(0, 4)} ${input.phone.slice(4, 6)}*****${input.phone.slice(-2)}`,
+          travelBand: input.travelBand,
+          language: input.language,
+          predictedWait: null,
+          smsStatus: null,
+          smsUpdatedAt: null,
+          holdUntil: null,
+          issuedAt: stamp(),
+          notifiedAt: null,
+          arrivedAt: null,
+          calledAt: null,
+          closedAt: null,
+          overridden: false,
+        }
+        tickets.push(t)
+        phones.set(t.id, input.phone)
+        renumber()
+        events.push({ seq: events.length + 1, type: 'joined', ticketId: t.id, at: stamp(), actor: 'patient', actorId: null })
+        return publicView(t)
+      })
+    },
+
+    getWebTicket(ticketId) {
+      const t = tickets.find((x) => x.id === ticketId)
+      // USSD and desk tickets have no public page, so they answer 404 like an unknown id.
+      if (!t || t.channel !== 'web') return fail(problem(404, 'Not found', 'No such ticket.'))
+      return reply(publicView(t))
     },
 
     cancelTicket(ticketId, key) {

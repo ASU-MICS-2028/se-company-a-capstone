@@ -1,7 +1,7 @@
 // The ONE place the screens get data from. Screens call `api.*` and never fetch directly.
 // Today `api` is the in-memory mock. When Eric's backend is ready (#18), point `api` at an HTTP
 // client with the same methods, and nothing else in the app changes.
-import type { Clinic, OverrideInput, QueueEvent, QueueResponse, Ticket, TicketStatus } from './types'
+import type { Clinic, OverrideInput, PublicTicket, QueueEvent, QueueResponse, Ticket, TicketStatus, WebTicketInput } from './types'
 import { createMockApi } from './mock'
 
 /**
@@ -28,6 +28,12 @@ export interface TwenApi {
   overridePosition(ticketId: string, input: OverrideInput, idempotencyKey?: string): Promise<Ticket>
   /** POST /tickets/{ticketId}/cancel */
   cancelTicket(ticketId: string, idempotencyKey?: string): Promise<Ticket>
+
+  // Patient web page: no login (contract tag `patient`).
+  /** POST /clinics/{clinicId}/web-tickets. 409 if the phone already has a ticket (the answer says no more). */
+  joinFromWeb(clinicId: string, input: WebTicketInput, idempotencyKey?: string): Promise<PublicTicket>
+  /** GET /web-tickets/{ticketId}. 404 for USSD and desk tickets. */
+  getWebTicket(ticketId: string): Promise<PublicTicket>
 }
 
 export const api: TwenApi = createMockApi()
