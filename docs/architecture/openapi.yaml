@@ -52,19 +52,18 @@ paths:
       description: Takes no input, so it has no client errors. The linter's "needs a 4xx" warning is ignored on purpose in `.redocly.lint-ignore.yaml`.
       security: []
       responses:
-        "503":
-          description: Database unreachable
         "200":
-          description: Up
+          description: Up, and the database answers
           content:
             application/json:
-              schema:
-                type: object
-                required: [status, database]
-                properties:
-                  status: { type: string, enum: [ok] }
-                  database: { type: string, enum: [ok, down] }
+              schema: { $ref: "#/components/schemas/Health" }
               example: { status: ok, database: ok }
+        "503":
+          description: The process is up but the database is unreachable. Same body, so monitoring can tell the two apart.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+              example: { status: ok, database: down }
 
   /clinics/{clinicId}:
     parameters: [ { $ref: "#/components/parameters/clinicId" } ]
@@ -579,6 +578,13 @@ components:
           schema: { $ref: "#/components/schemas/Problem" }
 
   schemas:
+    Health:
+      type: object
+      required: [status, database]
+      properties:
+        status: { type: string, enum: [ok], description: Always ok when the process answers }
+        database: { type: string, enum: [ok, down] }
+
     TicketStatus:
       type: string
       description: |

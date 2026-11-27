@@ -25,6 +25,7 @@ ai_used: yes
 - **Gateway secret** must never reach a log.
 - **Web booking** ([#58](https://github.com/ASU-MICS-2028/se-company-a-capstone/pull/58)): a `web` channel, a public join (`POST /clinics/{clinicId}/web-tickets`) and a public status read for the patient page (`GET /web-tickets/{ticketId}`), both rate-limited. One active ticket per phone, whichever channel issued it, so `createTicket` (desk) can now answer 409 too.
 - **Grace window:** a new clinic's `graceMinutes` starts at 20.
+- **Health:** the 503 now has a body (`database: down`), matching what the backend scaffold returns (#49, PR #65).
 - **Lint:** no warnings. Two deliberate ignores, each with its reason, in `.redocly.lint-ignore.yaml`.
 
 Also three decisions (arrival before calling; freezing at v0.2; web phone numbers are unverified) and one learning (the GSM alphabet).
