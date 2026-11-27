@@ -18,7 +18,7 @@ The proposal (§6) picked FastAPI, PostgreSQL and scikit-learn, and described th
 - **Python 3.12 and FastAPI**, because Henry's model is scikit-learn and the predictor runs in-process ([predictor interface](../docs/architecture/predictor-interface.md)).
 - **Synchronous endpoints (`def`, not `async def`).** FastAPI runs each synchronous endpoint on a thread from its pool, so one slow request does not block the others. That is the thread-based model, and it is plenty for one clinic.
 - **PostgreSQL 16**, reached through **SQLAlchemy 2** with the **psycopg 3** driver. Schema changes go through **Alembic** migrations.
-- **Concurrency is the database's job.** Each request is one transaction. `call-next` locks the row it calls (`SELECT ... FOR UPDATE SKIP LOCKED`), so two nurses tapping at the same moment call two different patients, never the same one twice.
+- **Concurrency is the database's job.** Each request is one transaction. `call-next` locks the row it calls (`SELECT ... FOR NO KEY UPDATE SKIP LOCKED`), so two nurses tapping at the same moment call two different patients, never the same one twice. The lighter `FOR NO KEY UPDATE` matters: a test for the data model (#47, PR #62) showed that plain `FOR UPDATE` also skips a ticket while an event about it is being saved.
 
 This changes one line of the proposal: the handlers are synchronous, not async.
 
