@@ -22,7 +22,7 @@ const rows = () => within(screen.getByRole('table')).getAllByRole('row').slice(1
 describe('staff queue screen', () => {
   it('shows a loading message first, then the list', async () => {
     renderPage()
-    expect(screen.getByRole('status')).toHaveTextContent('Loading the queue')
+    expect(screen.getByText('Loading the queue…')).toBeInTheDocument()
     expect(await screen.findByRole('table')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Today’s queue')
   })
@@ -72,6 +72,8 @@ describe('staff queue screen', () => {
     await user.tab() // skip link
     expect(screen.getByRole('link', { name: 'Skip to the queue' })).toHaveFocus()
     await user.tab() // Live queue
+    await user.tab() // Call next patient
+    expect(screen.getByRole('button', { name: 'Call next patient' })).toHaveFocus()
     await user.tab() // first filter: All
     await user.tab() // Booked
     expect(screen.getByRole('button', { name: /^Booked/ })).toHaveFocus()
