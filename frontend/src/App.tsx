@@ -1,11 +1,32 @@
+import { BrowserRouter, Link, Route, Routes } from 'react-router'
+import { QueuePage } from './staff/QueuePage'
 import './App.css'
 
-// Placeholder start page. The staff board and the patient page replace it in the next PRs.
-export default function App() {
+export function Start() {
   return (
     <main className="start">
       <h1 className="wordmark">Twɛn</h1>
-      <p>The staff board and the patient page are being built.</p>
+      <p>
+        <Link to="/staff">Open the staff board</Link>
+      </p>
+      <p>The patient page comes next.</p>
     </main>
+  )
+}
+
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Start />} />
+      <Route path="/staff" element={<QueuePage />} />
+    </Routes>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   )
 }
