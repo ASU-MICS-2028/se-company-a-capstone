@@ -22,7 +22,7 @@ Record the system's shape and tools as decisions, so the team builds one thing a
 - [x] A trade-off table by optimisation goal and operating cost.
 - [x] Decision: FastAPI on Python 3.12, synchronous endpoints, SQLAlchemy 2, psycopg 3, Alembic, PostgreSQL 16.
 - [x] Decision: the outbox worker is a separate polling process with `SKIP LOCKED`; no Redis, Celery or Kafka.
-- [ ] Decision: tunnel for development and a **named** free host for the demo (the host is chosen by 30 Nov).
+- [x] Decision: tunnel for development and a **named** free host for the demo (the host is chosen by 30 Nov).
 - [ ] Team agrees, and each decision's status is set to accepted.
 
 ## Inputs and outputs
@@ -44,3 +44,4 @@ Record the system's shape and tools as decisions, so the team builds one thing a
 ## Log
 
 - 2026-11-24: Four decisions drafted as proposed; PR opened for team review.
+- 2026-11-27: Hosting candidates checked against official pages. Named Oracle Cloud Always Free (Arm VM) for the demo, Azure for Students as the no-card fallback, and ngrok's free dev domain for development. Still proposed; a teammate tries the Oracle sign-up by 30 Nov.
