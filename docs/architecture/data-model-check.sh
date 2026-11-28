@@ -191,7 +191,7 @@ s2=$(q "$(append_sql notified "'$t2'")")
 q "insert into sms_outbox (clinic_id, ticket_id, event_type, event_seq, body) values ('demo-opd', '$t2', 'notified', $s2, 'Come now')" >/dev/null
 CLAIM="select o.id from sms_outbox o join tickets t on t.id = o.ticket_id
   where o.status = 'queued' and o.next_attempt_at <= now()
-  order by o.next_attempt_at, o.id limit 1 for update of o skip locked;"
+  order by o.next_attempt_at, o.id limit 1 for no key update of o skip locked;"
 ( p -t -A -c "begin; $CLAIM select pg_sleep(2); commit;" > "$tmp" 2>&1 ) &
 b=$(p -t -A -c "select pg_sleep(0.5); $CLAIM" | tail -1)
 wait

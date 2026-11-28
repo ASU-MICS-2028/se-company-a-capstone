@@ -267,6 +267,7 @@ The queue is not simply oldest first: an override moves a patient ahead, and the
 
 - A new ticket gets the moment it was issued, in seconds (`extract(epoch from now())`), so tickets join at the back in issue order. Two tickets with an equal key are ordered by `id`.
 - **An override changes one row only.** To move a ticket to position *k*, it takes the keys of the tickets now at *k − 1* and *k* and gives the moved ticket the halfway point. No other ticket is rewritten, so an override locks one row.
+- **A recall changes one row too.** A recalled ticket (`called` back to `arrived`, for a patient who missed the call) goes just behind the last ticket that is `arrived` now: halfway between that ticket's key and the next active ticket's key, or that key + 1 if nothing follows. If no other ticket is arrived, it keeps its own key, so it is called again next. #50 writes the query.
 - **Halve by multiplying by 0.5, not dividing by 2.** `numeric` division rounds to a fixed number of decimals, so 100 overrides into the same gap gave only 28 different keys. Multiplying keeps every decimal, and all 101 stayed different (the check script tests this).
 - `position` is never stored, because every call would change everyone's position. It is the ticket's row number among `waiting`, `notified` and `arrived` tickets ordered by `(queue_key, id)`.
 
@@ -301,8 +302,8 @@ Two overrides at the same instant could pick the same halfway point. The tie is 
 create table events (
   clinic_id text not null references clinics (id),
   seq       bigint not null check (seq >= 1),
-  type      text not null check (type in ('joined', 'notified', 'arrived', 'called', 'seen', 'no_show',
-              'cancelled', 'override', 'sms_updated', 'status_changed', 'settings_changed')),
+  type      text not null check (type in ('joined', 'notified', 'arrived', 'called', 'recalled', 'seen',
+              'no_show', 'cancelled', 'override', 'sms_updated', 'status_changed', 'settings_changed')),
   ticket_id uuid references tickets (id),
   at        timestamptz not null default now(),
   actor     text not null check (actor in ('patient', 'staff', 'system')),
@@ -335,7 +336,7 @@ create trigger events_append_only before update or delete on events
 
 ### 7. `sms_outbox`
 
-**Why it exists.** The "come now" SMS must never be lost and never sent twice, but the SMS provider can't be called inside the request that changes the ticket (a slow provider would freeze the board). So the ticket change and a message row commit together in one transaction. A separate worker sends the row later. This is the transactional outbox ([note](../../knowledge/transactional-outbox.md)).
+**Why it exists.** The "come now" SMS must never be lost and never sent twice, but the SMS provider can't be called inside the request that changes the ticket (a slow provider would freeze the board). So the worker moves the ticket to `notified` and inserts the message row in one transaction (PR #57), and sends the row in a later step. This is the transactional outbox ([note](../../knowledge/transactional-outbox.md)).
 
 ```sql
 create table sms_outbox (
@@ -490,10 +491,10 @@ from sms_outbox o join tickets t on t.id = o.ticket_id
 where o.status = 'queued' and o.next_attempt_at <= now()
 order by o.next_attempt_at, o.id
 limit 1
-for update of o skip locked;
+for no key update of o skip locked;
 ```
 
-Two workers take two different messages (shown by the check script). The worker sends, then updates the message, sets `hold_until` on first send, and appends an `sms_updated` event. The remaining gap is the one PR #57 already states: a crash after the provider accepts but before our commit can send the message again.
+Two workers take two different messages (shown by the check script). The worker sends, then updates the message, sets `hold_until` on first send, and appends an `sms_updated` event. The remaining gap is the one PR #57 states: a message can go out twice if the worker crashes after the provider accepts it but before our commit, or if the call times out and the worker can't tell whether it was sent. It uses `for no key update`, like `call-next`, so the code has one lock mode.
 
 ### Ticket moves and repeats
 
@@ -559,11 +560,11 @@ The contract leaves these open. Each has a proposed answer for the review.
 2. **What does the API answer for ticket 1000?** The counter refuses it, but the contract has no response for a clinic that is full for the day. *Proposed:* 409 with a problem saying the clinic has issued its 999 tickets for today.
 3. **Where does `staffOnDuty` start for a new clinic?** The contract says nothing. This draft uses 1, so predictions work from the first ticket. With 0, every predicted wait is null until staff set it.
 4. **Which tickets does `waitingCount` count?** *Proposed:* the same as `position`: `waiting`, `notified` and `arrived`.
-5. **`meanServiceMinutes` before the day's first consultation.** The predictor interface (PR #56) leaves how many consultations to average to #51. With none yet today, it needs a starting value. *Proposed:* yesterday's mean, or a fixed 5 minutes for a new clinic.
+5. **`meanServiceMinutes` before the day's first consultation.** *Answered in PR #56:* until a consultation has finished today, the backend uses a default of 17.5 minutes, the middle of the 10 to 25 minutes staff reported (survey F9, #69). It is a backend setting. How many consultations to average is still #51's call.
 6. **Does yesterday's service status still show today?** The contract calls it today's status. *Proposed:* show it only if `updated_at` is today in Accra, otherwise null.
 7. **Who deletes idempotency keys after 24 hours, and is one `web` scope enough?** *Proposed:* the outbox worker deletes old keys once an hour. All anonymous joins share the `web` scope. That is safe as long as the page makes random keys (the contract suggests a UUID), and a mismatched request gets 422, not someone else's ticket.
 8. **How long do we keep phone numbers?** Closed tickets keep the phone, which the evaluation doesn't need. *Proposed:* blank `tickets.phone` some days after a ticket closes, and state that in the ethics section (#14). The team should pick the number of days.
-9. **Is the phone always E.164?** The rule compares phone numbers as exact text, so the USSD gateway and the web page must send the same format. The web input is validated as E.164. Whether Africa's Talking always sends the `+` should be checked in the sandbox (#53), and the backend should normalise if it doesn't.
+9. **Is the phone always E.164?** The rule compares phone numbers as exact text, so the USSD gateway and the web page must send the same format. The web input only accepts Ghana numbers (`+233` and nine digits, contract v0.2). Whether Africa's Talking always sends the `+` should be checked in the sandbox (#53), and the backend should normalise if it doesn't.
 
 10. **What happens to a queued SMS whose ticket has moved on?** If the patient arrives early or is cancelled before the message goes out (or before a retry), the worker query above would still send "come now". The contract's `smsStatus` has no value for a message that was dropped. *Proposed:* the worker only sends while the ticket is `notified`, and otherwise marks the message `failed` with no retry and `last_error` saying the ticket moved on. The contract review decides whether `smsStatus` needs its own value for that.
 

@@ -41,6 +41,7 @@ ai_used: yes
 | Event seq decision | Claude Code | Proposed the per-clinic counter and wrote the decision record | not yet checked |
 | ERD, field map, open questions | Claude Code | Wrote them. The proposed answers to the ten open questions are Claude Code's | not yet checked |
 | Check script and learning | Claude Code | Wrote 40 checks, ran them on PostgreSQL 16 in Docker, and corrected its own wrong guess about plain `FOR UPDATE` after the test disproved it. An AI review pass then found the `FOR UPDATE` skip, a halving rule that lost precision, a phone check that blocked open question 8, and paraphrases in quotation marks; all four were fixed and retested | not yet checked |
+| Follow-ups from the other reviews (28 Nov) | Claude Code | Matched Joseph's reviews of #55, #56 and #57: the `recalled` event type and where a recalled ticket lands, the worker writing the ticket move and the outbox row together, one lock mode for the worker, the timeout duplicate, the 17.5-minute start-of-day default and Ghana-only web phones. Reran the 40 checks on PostgreSQL 16 in Docker: 40 passed, 0 failed | not yet checked |
 
 ## How to check it
 
