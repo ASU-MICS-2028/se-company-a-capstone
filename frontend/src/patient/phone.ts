@@ -1,6 +1,6 @@
 /**
  * Turns what a patient types into the E.164 form the contract wants (+233XXXXXXXXX).
- * Accepts "024 555 0147", "0245550147", "+233 24 555 0147" and "233245550147".
+ * Accepts "024 400 0111", "0244000111", "+233 24 400 0111" and "233244000111".
  * Returns null if it isn't a Ghanaian mobile number (10 digits starting with 0, or 9 after +233).
  */
 export function toE164(typed: string): string | null {

@@ -42,7 +42,7 @@ describe.skipIf(!isV02)(`mock matches the API contract (v${version})`, () => {
 
   it('a web ticket is a valid PublicTicket, with no extra fields', async () => {
     const check = validator('PublicTicket')
-    const t = await api.joinFromWeb('demo-opd', { phone: '+233245550199', travelBand: '15_30', language: 'en' })
+    const t = await api.joinFromWeb('demo-opd', { phone: '+233244000199', travelBand: '15_30', language: 'en' })
     expect(check(t), JSON.stringify(check.errors)).toBe(true)
     expect(Object.keys(t).sort()).toEqual(Object.keys(contract.components.schemas.PublicTicket.properties).sort())
   })

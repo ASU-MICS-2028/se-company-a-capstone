@@ -24,3 +24,24 @@ export function leaveAdvice(ticket: PublicTicket, band: Band | null, now: number
   const at = Date.parse(ticket.predictedWait.expectedFrom) - top * 60_000
   return at <= now ? { kind: 'leaveNow' } : { kind: 'leaveAt', at: new Date(at) }
 }
+
+// The SMS link has no `?band=`, so the page also keeps the band on this phone, by ticket id.
+// Only the band is kept: never the phone number. Storage can be blocked, so every call is guarded.
+const bandKey = (ticketId: string) => `twen.band.${ticketId}`
+
+export function rememberBand(ticketId: string, band: Band) {
+  try {
+    localStorage.setItem(bandKey(ticketId), band)
+  } catch {
+    /* storage blocked: the link still carries ?band= */
+  }
+}
+
+export function recallBand(ticketId: string): Band | null {
+  try {
+    const v = localStorage.getItem(bandKey(ticketId))
+    return isBand(v) ? v : null
+  } catch {
+    return null
+  }
+}

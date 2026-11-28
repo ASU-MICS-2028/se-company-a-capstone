@@ -37,6 +37,8 @@ export function createMockApi(options: MockOptions = {}): TwenApi {
   const answered = new Map<string, { request: string; result: unknown }>()
   // Full phone numbers live only here, never on a ticket, as the contract says (`phoneMasked` only).
   const phones = new Map<string, string>()
+  // Ticket numbers only go up. Counting the list would reuse a number if a ticket were ever removed.
+  let lastNumber = tickets.reduce((max, t) => Math.max(max, Number(t.code.split('-').at(-1)) || 0), 0)
 
   const wait = () => (delayMs > 0 ? new Promise((r) => setTimeout(r, delayMs)) : Promise.resolve())
 
@@ -233,7 +235,7 @@ export function createMockApi(options: MockOptions = {}): TwenApi {
         if (holder) {
           throw problem(409, 'Phone already has a ticket', 'This number is already in the queue. Dial the USSD code and choose Check my ticket.')
         }
-        const n = tickets.length + 1
+        const n = ++lastNumber
         const t: Ticket = {
           id: crypto.randomUUID(),
           code: `${CLINIC.ticketPrefix}-${String(n).padStart(3, '0')}`,

@@ -4,7 +4,7 @@ import { api as defaultApi, type TwenApi } from '../api/client'
 import { ApiError, type PublicTicket } from '../api/types'
 import { formatTime } from '../lib/format'
 import { PatientLayout } from './PatientLayout'
-import { BANDS, isBand, leaveAdvice, type Band } from './travel'
+import { BANDS, isBand, leaveAdvice, recallBand, rememberBand, type Band } from './travel'
 
 const CLOSED = ['seen', 'no_show', 'cancelled']
 
@@ -22,7 +22,10 @@ export function TicketPage({ api = defaultApi, refreshMs = 30_000, now = Date.no
   const { ticketId = '' } = useParams()
   const [params] = useSearchParams()
   const bandParam = params.get('band')
-  const band = isBand(bandParam) ? bandParam : null
+  const band = isBand(bandParam) ? bandParam : recallBand(ticketId)
+  useEffect(() => {
+    if (isBand(bandParam)) rememberBand(ticketId, bandParam)
+  }, [bandParam, ticketId])
   const [state, setState] = useState<State>({ kind: 'loading' })
 
   const load = useCallback(async () => {
@@ -36,16 +39,18 @@ export function TicketPage({ api = defaultApi, refreshMs = 30_000, now = Date.no
   }, [api, ticketId, now])
 
   const closed = state.kind === 'ready' && CLOSED.includes(state.ticket.status)
+  // Nothing more to fetch once the visit is over, or the ticket doesn't exist.
+  const stop = closed || state.kind === 'missing'
 
   useEffect(() => {
     void load()
   }, [load])
 
   useEffect(() => {
-    if (closed || refreshMs <= 0) return
+    if (stop || refreshMs <= 0) return
     const id = setInterval(() => void load(), refreshMs)
     return () => clearInterval(id)
-  }, [load, refreshMs, closed])
+  }, [load, refreshMs, stop])
 
   return (
     <PatientLayout>
@@ -67,7 +72,7 @@ export function TicketPage({ api = defaultApi, refreshMs = 30_000, now = Date.no
       )}
       {state.kind === 'ready' && <TicketView ticket={state.ticket} band={band} now={now()} />}
       {state.kind === 'ready' && (
-        <p className="muted small" role="status">
+        <p className="muted small">
           {state.stale ? 'No connection. Showing your ticket from ' : 'Updated '}
           <span className="mono">{formatTime(new Date(state.at))}</span>
           {closed ? '.' : '. This page updates by itself.'}
@@ -85,7 +90,10 @@ function TicketView({ ticket: t, band, now }: { ticket: PublicTicket; band: Band
         <span className="muted small-label">Your ticket</span>
         <h1 className="ticket-code mono">{t.code}</h1>
       </div>
-      <Status ticket={t} band={band} bandLabel={bandLabel} now={now} />
+      {/* Read out when the card changes (e.g. "Leave now"), not on every 30-second refresh. */}
+      <div aria-live="polite">
+        <Status ticket={t} band={band} bandLabel={bandLabel} now={now} />
+      </div>
       <p className="muted small">
         Texts go to <span className="mono">{t.phoneMasked}</span>. Show this ticket number at the front desk when you arrive.
       </p>

@@ -1,11 +1,11 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { api as defaultApi, CLINIC_ID, newIdempotencyKey, type TwenApi } from '../api/client'
 import { ApiError } from '../api/types'
 import { useLanguage } from './language'
 import { PatientLayout } from './PatientLayout'
 import { toE164 } from './phone'
-import { BANDS, type Band } from './travel'
+import { BANDS, rememberBand, type Band } from './travel'
 
 /** Join today's queue from a phone browser (contract: joinFromWeb). No login, no symptoms asked. */
 export function JoinPage({ api = defaultApi }: { api?: TwenApi }) {
@@ -18,21 +18,32 @@ export function JoinPage({ api = defaultApi }: { api?: TwenApi }) {
   const [busy, setBusy] = useState(false)
   // One key per filled-in form. A retry after a lost answer reuses it and gets the same ticket back.
   const key = useRef<{ forInput: string; value: string } | null>(null)
-  const ids = { phone: useId(), phoneErr: useId(), band: useId(), bandErr: useId(), consentErr: useId(), hint: useId() }
+  const ids = { phone: useId(), phoneErr: useId(), band: useId(), bandErr: useId(), consent: useId(), consentErr: useId(), hint: useId() }
+  const firstBand = useRef<HTMLInputElement>(null)
+  // Which field to focus once the error messages are on screen. Set on each failed send, so a
+  // second failed send moves focus again.
+  const [focusTo, setFocusTo] = useState<{ field: 'phone' | 'band' | 'consent' } | null>(null)
+
+  // Focus after React has drawn the errors, so the field's error is part of what a screen reader reads out.
+  useEffect(() => {
+    if (!focusTo) return
+    if (focusTo.field === 'band') firstBand.current?.focus()
+    else document.getElementById(focusTo.field === 'phone' ? ids.phone : ids.consent)?.focus()
+  }, [focusTo, ids.phone, ids.consent])
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (busy) return
     const e164 = toE164(phone)
     const next = {
-      phone: e164 ? undefined : 'Enter a Ghana mobile number, like 024 555 0147.',
+      phone: e164 ? undefined : 'Enter a Ghana mobile number, like 024 400 0111.',
       band: band ? undefined : 'Choose how long it takes you to get here.',
       consent: agreed ? undefined : 'Tick the box so we can text you about this visit.',
     }
     setErrors(next)
     if (!e164 || !band || !agreed) {
       // Move focus to the first problem, so keyboard and screen reader users find it.
-      document.getElementById(!e164 ? ids.phone : !band ? ids.band : ids.consentErr)?.focus()
+      setFocusTo({ field: !e164 ? 'phone' : !band ? 'band' : 'consent' })
       return
     }
     const input = { phone: e164, travelBand: band, language: lang }
@@ -41,6 +52,7 @@ export function JoinPage({ api = defaultApi }: { api?: TwenApi }) {
     setBusy(true)
     try {
       const ticket = await api.joinFromWeb(CLINIC_ID, input, key.current.value)
+      rememberBand(ticket.id, band)
       navigate(`/ticket/${ticket.id}?band=${band}`)
     } catch (err) {
       setErrors({ form: problemText(err) })
@@ -77,14 +89,17 @@ export function JoinPage({ api = defaultApi }: { api?: TwenApi }) {
         </div>
 
         <fieldset className="field" aria-describedby={errors.band ? ids.bandErr : undefined}>
-          <legend id={ids.band} tabIndex={-1}>
+          <legend id={ids.band}>
             How long does it take you to get here?
           </legend>
           <small className="muted">Include waiting for a trotro or taxi.</small>
           <div className="choices">
-            {BANDS.map((b) => (
+            {BANDS.map((b, i) => (
               <label key={b.value} className="choice">
-                <input type="radio" name="band" value={b.value} checked={band === b.value} onChange={() => setBand(b.value)} />
+                <input
+                  ref={i === 0 ? firstBand : undefined}
+                  aria-describedby={i === 0 && errors.band ? ids.bandErr : undefined}
+                  type="radio" name="band" value={b.value} checked={band === b.value} onChange={() => setBand(b.value)} />
                 <span>{b.label}</span>
               </label>
             ))}
@@ -98,11 +113,11 @@ export function JoinPage({ api = defaultApi }: { api?: TwenApi }) {
 
         <div className="field">
           <label className="consent">
-            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} aria-describedby={errors.consent ? ids.consentErr : undefined} />
+            <input id={ids.consent} aria-invalid={!!errors.consent} type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} aria-describedby={errors.consent ? ids.consentErr : undefined} />
             <span>We keep your number only to text you about this visit, and delete it after 30 days.</span>
           </label>
           {errors.consent && (
-            <small id={ids.consentErr} className="error" tabIndex={-1}>
+            <small id={ids.consentErr} className="error">
               {errors.consent}
             </small>
           )}

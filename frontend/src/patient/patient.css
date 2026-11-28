@@ -85,9 +85,6 @@
   font-weight: 700;
   font-size: 14px;
 }
-.field legend:focus {
-  outline: none;
-}
 .field input[type='tel'] {
   min-height: 50px;
   padding: 0 14px;
@@ -160,9 +157,6 @@
 .error {
   color: var(--color-urgent-ink);
   font-weight: 700;
-}
-.error:focus {
-  outline: none;
 }
 .error--box {
   margin: 0;

@@ -13,7 +13,7 @@ ai_used: yes
 ## What changed
 
 - **`/join`**, built from prototype P03 but cut to what contract v0.2 supports:
-  - the phone number, which accepts `024 555 0147`, `0245550147` or `+233…` and is sent as `+233…`
+  - the phone number, which accepts `024 400 0111`, `0244000111` or `+233…` and is sent as `+233…`
   - "How long does it take you to get here?" with four choices
   - a one-line consent
   - EN / Twi in the corner, which sets the language of the texts
@@ -46,7 +46,8 @@ Step 5 of the #10 plan. The scope cut keeps one patient web page: join, then tic
 | Join and ticket pages, styles | Claude Code | Built them from the P03, P05, P06 and P11 to P13 prototypes, cut to contract v0.2 | Not yet checked |
 | Leave-time rule | Claude Code | Proposed "start of the range minus the top of the band" | Not yet checked |
 | Mock patient endpoints | Claude Code | Wrote them from the contract's `joinFromWeb` and `getWebTicket` | Not yet checked |
-| Tests (38 new, 104 in all) | Claude Code | Wrote tests for phone parsing, the leave time, every ticket state, 409, 429, a lost answer and keyboard-only use | Not yet checked |
+| Review fixes from Joseph's review | Claude Code | Focus now moves after the errors are drawn, and goes to the checkbox or the first travel choice when that is the only problem. Removed the hidden focus outline. The ticket page keeps the travel band on the phone, by ticket id, so a text-message link without `?band=` still shows the leave time. Only the band is kept, never the number. Polling stops after "not found". The status card is a polite live region, and the "Updated" line is no longer announced. Ticket numbers in the mock only go up. Test phone numbers use the contract's `+233244000111` style. Each fix has a test that fails without it. | Not yet checked |
+| Tests (45 new, 114 in all) | Claude Code | Wrote tests for phone parsing, the leave time, every ticket state, 409, 429, a lost answer and keyboard-only use | Not yet checked |
 | Contrast fix | Claude Code | Measured the contrast and picked the darker ember | Not yet checked |
 
 ## How to check it
@@ -58,4 +59,4 @@ npm run lint && npm run typecheck && npm test && npm run build
 npm run dev   # open http://localhost:5173/join on a phone-sized window
 ```
 
-Tests end with `104 passed | 3 skipped`. On the page: press "Get my ticket" with nothing filled in and three plain messages appear, with focus on the phone field. Fill it in, choose "Under 15 min", tick the box and send: you get a ticket like `B-015` and "Leave home around HH:MM".
+Tests end with `114 passed | 4 skipped`. On the page: press "Get my ticket" with nothing filled in and three plain messages appear, with focus on the phone field. Fill it in, choose "Under 15 min", tick the box and send: you get a ticket like `B-015` and "Leave home around HH:MM".
