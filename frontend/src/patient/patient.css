@@ -1,0 +1,249 @@
+/* Patient pages: phone first, big text, 44px+ tap targets. Values from tokens.css; follows P03, P05, P06 and P11 to P13. */
+
+.patient {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 16px 32px;
+  font-size: 15px;
+}
+.patient__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 8px;
+}
+.patient__logo {
+  font-family: var(--font-logo);
+  font-size: 28px;
+  line-height: 1;
+}
+.lang {
+  display: flex;
+  padding: 3px;
+  border-radius: var(--radius-control);
+  background: var(--color-tag);
+}
+.lang button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lang button[aria-pressed='true'] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.patient__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.patient h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.lead {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+.muted {
+  color: var(--color-ink-muted);
+}
+.small {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Join form */
+.pform {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.field > label,
+.field legend {
+  padding: 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+.field input[type='tel'] {
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 17px;
+}
+.field input[aria-invalid='true'] {
+  border-color: var(--color-urgent-ink);
+}
+.field small {
+  font-size: 13px;
+}
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.choice {
+  position: relative;
+  display: flex;
+}
+.choice input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+}
+.choice span {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+}
+.choice input:checked + span {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.choice input:focus-visible + span {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  color: var(--color-ink-soft);
+}
+.consent input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--color-primary);
+}
+.error {
+  color: var(--color-urgent-ink);
+  font-weight: 700;
+}
+.error--box {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  background: var(--color-urgent-wash);
+}
+.pbtn {
+  min-height: 54px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pbtn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Ticket page */
+.ticket-head {
+  display: flex;
+  flex-direction: column;
+}
+.small-label {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.patient h1.ticket-code {
+  font-size: 50px;
+  font-weight: 600;
+  line-height: 1.05;
+}
+.card-p {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 22px;
+  border-radius: var(--radius-card);
+}
+.card-p p {
+  margin: 0;
+}
+.card-p__kicker {
+  font-weight: 700;
+}
+.card-p__big {
+  font-weight: 800;
+  letter-spacing: -1px;
+  font-size: clamp(52px, 18vw, 80px);
+  line-height: 0.95;
+}
+.card-p__big--md {
+  font-size: 34px;
+  line-height: 1.05;
+}
+.card-p--wash {
+  background: var(--color-leave-wash);
+  color: var(--color-leave-ink);
+}
+.card-p--ember {
+  background: var(--color-urgent-strong);
+  color: #ffffff;
+}
+.card-p--ok {
+  background: var(--color-ok-wash);
+  color: var(--color-ok-ink);
+}
+.card-p--deep {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.card-p--urgent {
+  background: var(--color-urgent-wash);
+  color: #5a1f08;
+}
+.card-p--plain {
+  background: var(--color-surface);
+}
+.card-p--plain h1 {
+  font-size: 22px;
+}
+.field > label.consent {
+  font-weight: 500;
+}
