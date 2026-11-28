@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title"><title id="title">Nyansapo Systems — wisdom knot mark</title><defs><mask id="underpass" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256"><rect width="256" height="256" fill="white"/><circle cx="70" cy="128" r="16" fill="black"/><circle cx="186" cy="128" r="16" fill="black"/></mask></defs>
+<g fill="none" stroke="#8a1c2b" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+<g mask="url(#underpass)">
+<path d="M104 48 C77 65 49 86 52 108 C53 117 61 123 70 128 L104 152 V228"/>
+<path d="M152 48 C179 65 207 86 204 108 C203 117 195 123 186 128 L152 152 V228"/>
+</g>
+<path d="M104 28 V104 L70 128 C44 152 45 167 67 183 C79 192 96 199 104 208"/>
+<path d="M152 28 V104 L186 128 C212 152 211 167 189 183 C177 192 160 199 152 208"/>
+<path d="M176 120.941 L186 128" stroke="#e0a21b" stroke-linecap="butt"/>
+</g></svg>
