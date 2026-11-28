@@ -37,6 +37,7 @@ Each figure has a key that explains every box and why it is separate, and says w
 | Both diagrams and their keys | Claude Code | Drew them from the scope cut, contract v0.2, the decisions in PR #57, the data model and the predictor interface, and wrote the keys | not yet checked |
 | Render check | Claude Code | Rendered both diagrams with the Mermaid CLI (12.2.0, Mermaid 12.3.0) through pnpm, looked at the images for crossing lines, confirmed a deliberately broken copy fails to parse, and viewed the file as GitHub draws it on the branch | not yet checked |
 | Plan for #48 and this file | Claude Code | Wrote them | not yet checked |
+| Review follow-ups (28 Nov) | Claude Code | From Joseph's review: the worker moves tickets to `notified` (settled by PR #57, so the open question is closed), duplicates from a crash or a timed-out send, one lock mode, the paper chit on the desk arrows (F13) and a desktop browser for the board (F14). Re-rendered both diagrams with Mermaid CLI 12.2.0 | not yet checked |
 
 ## How to check it
 
