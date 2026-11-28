@@ -44,6 +44,9 @@ With the database running, from `backend/`:
 pytest -q
 ```
 
+With no database, the two database tests are skipped on a laptop. In CI (where `CI=true`) they fail instead,
+because a missing database there means the pipeline is broken.
+
 From the repo root, the way CI runs it:
 
 ```bash

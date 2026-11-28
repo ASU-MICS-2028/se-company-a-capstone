@@ -44,6 +44,7 @@ Sprint 2 backlog item 6 and issue #49: a walking skeleton, so each later endpoin
 | App, database engine, Alembic, Compose, pinned requirements | Claude Code | Wrote them, following the stack proposed in PR #57 and the contract's `/health` | not yet checked |
 | Tests | Claude Code | Wrote the four tests, ran each one failing before its code existed, then passing, against PostgreSQL 16 from `compose.yaml` | not yet checked |
 | README, plan and this file | Claude Code | Drafted them | not yet checked |
+| Review follow-ups (28 Nov) | Claude Code | From Joseph's review: database tests skip when no PostgreSQL is running (but fail in CI), the migrations test ends at head, and `database_url()` refuses non-PostgreSQL URLs, with a new test. Ran 9 tests against PostgreSQL 16 (9 passed), with no database (7 passed, 2 skipped) and with no database as CI (2 errors, as intended). Showed the old migrations test left the database at base and the new one leaves it at head | not yet checked |
 
 ## How to check it
 

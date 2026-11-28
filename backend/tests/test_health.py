@@ -9,7 +9,7 @@ from app.db import database_url
 client = TestClient(main.app)
 
 
-def test_health_ok_with_the_real_database():
+def test_health_ok_with_the_real_database(database):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "database": "ok"}

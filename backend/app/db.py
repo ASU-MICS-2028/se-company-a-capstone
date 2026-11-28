@@ -14,8 +14,13 @@ def database_url(raw: str | None = None) -> URL:
 
     CI and most hosts give a plain postgresql:// URL. SQLAlchemy would open that with the
     older psycopg2 driver, which we don't install, so we name psycopg 3 here.
+    Any other database (sqlite://, mysql://) is a mistake, so it fails loudly instead.
     """
-    return make_url(raw or os.environ.get("DATABASE_URL", DEFAULT_URL)).set(drivername="postgresql+psycopg")
+    url = make_url(raw or os.environ.get("DATABASE_URL", DEFAULT_URL))
+    # Some hosts still hand out the old postgres:// spelling.
+    if url.get_backend_name() not in ("postgresql", "postgres"):
+        raise ValueError(f"DATABASE_URL must be a PostgreSQL URL, not {url.get_backend_name()}://")
+    return url.set(drivername="postgresql+psycopg")
 
 
 # pool_pre_ping: test a pooled connection before use, so a database restart doesn't break the next request.
