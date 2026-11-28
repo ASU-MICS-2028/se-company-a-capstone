@@ -40,7 +40,7 @@ export function MoveUpDialog({ ticket, lineLength, busy, onSubmit, onClose }: Pr
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.stopPropagation()
-      onClose()
+      if (!busy) onClose() // don't close while the move is on its way
       return
     }
     if (e.key !== 'Tab' || !box.current) return
@@ -106,7 +106,7 @@ export function MoveUpDialog({ ticket, lineLength, busy, onSubmit, onClose }: Pr
             <button type="submit" className="btn btn--primary" disabled={busy}>
               Move {ticket.code}
             </button>
-            <button type="button" className="btn btn--ghost" onClick={onClose}>
+            <button type="button" className="btn btn--ghost" aria-disabled={busy} onClick={() => !busy && onClose()}>
               Cancel
             </button>
           </div>

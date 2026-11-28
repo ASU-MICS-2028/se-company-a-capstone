@@ -39,7 +39,8 @@ Step 4 of the #10 plan: "Add buttons to call the next patient, mark a no-show an
 |---|---|---|---|
 | Mock staff writes | Claude Code | Wrote the six actions from the contract's state table and "Safe to repeat" rules | Not yet checked |
 | Buttons, dialog, log | Claude Code | Built them from the S02, S04, S05 and S07 prototypes, within what the contract supports | Not yet checked |
-| Tests (33 new, 66 in all) | Claude Code | Wrote tests for every action, refusals, the retry with the same key, double taps, the dialog's keyboard use and focus. Checked that the retry and double-tap tests fail when their guards are removed. | Not yet checked |
+| Review fixes from Joseph's review | Claude Code | Focus now lands on "Yes, mark … missed" and returns to "Mark missed" after Keep. The double-tap guard uses a ref. The Move up dialog can't close while a move is on its way. The 15-second refresh asks only for new log events (`after=<last seq>`). Three new tests, each checked to fail without its fix. | Not yet checked |
+| Tests (36 new, 69 in all) | Claude Code | Wrote tests for every action, refusals, the retry with the same key, double taps, the dialog's keyboard use and focus. Checked that the retry and double-tap tests fail when their guards are removed. | Not yet checked |
 
 ## How to check it
 
@@ -50,4 +51,4 @@ npm run lint && npm run typecheck && npm test && npm run build
 npm run dev   # open http://localhost:5173/staff
 ```
 
-Tests end with `66 passed | 3 skipped`. On the page: press "Call next patient" and B-006 turns "At desk", and "Logged today" shows it. Press "Move up" on B-013, pick a reason, and it moves to place 1, with the reason logged. Press Escape in the dialog and focus goes back to the button.
+Tests end with `69 passed | 3 skipped`. On the page: press "Call next patient" and B-006 turns "At desk", and "Logged today" shows it. Press "Move up" on B-013, pick a reason, and it moves to place 1, with the reason logged. Press Escape in the dialog and focus goes back to the button.
