@@ -24,9 +24,11 @@ from typing import Literal, Protocol
 @dataclass(frozen=True)
 class QueueSnapshot:
     position: int                # 1 = first in calling order
+    arrived_ahead: int           # arrived tickets ahead of this one; only these can be called next
     staff_on_duty: int           # the c in M/M/c; always 1 or more here
-    mean_service_minutes: float  # rolling mean of recent consultations
+    mean_service_minutes: float  # rolling mean of recent consultations; never 0 (see Inputs)
     recent_service_rate: float   # patients seen per hour in the last 60 minutes; 0 if none
+    arrival_rate_per_hour: float # patients who joined in the last 60 minutes; 0 if none
     at: datetime                 # when the prediction is made, timezone-aware (UTC)
 
 @dataclass(frozen=True)
@@ -44,22 +46,26 @@ class Predictor(Protocol):
 | Field | Where the backend gets it |
 |---|---|
 | `position` | the ticket's place among `waiting`, `notified` and `arrived` tickets (`Ticket.position` in the [contract](openapi.yaml)) |
+| `arrived_ahead` | the count of `arrived` tickets ahead of this one in calling order. `call-next` only calls arrived tickets, so this is the part of the line that is ready now |
 | `staff_on_duty` | `Clinic.staffOnDuty`, set by staff during the day. When it is 0, the backend does not call `predict`, and `predictedWait` is null |
-| `mean_service_minutes` | `Clinic.meanServiceMinutes`: the mean of recent consultations (`calledAt` to `closedAt` of `seen` tickets). #51 sets how many it averages |
+| `mean_service_minutes` | `Clinic.meanServiceMinutes`: the mean of recent consultations (`calledAt` to `closedAt` of `seen` tickets). #51 sets how many it averages. At the start of the day, before any consultation has finished, the backend passes a default of 17.5 minutes: the middle of the 10 to 25 minutes staff reported in the survey (F9, #69). The default is a backend setting, so it can be tuned |
 | `recent_service_rate` | the count of `seen` events in the last 60 minutes |
+| `arrival_rate_per_hour` | the count of `joined` events in the last 60 minutes. Erlang C needs the arrival rate as well as the service rate |
 | `at` | the clock. Adapters derive the hour of day and the weekday from it. Ghana is UTC+0 all year, so local time equals UTC |
 
-These are the features the proposal lists for the model: time of day, weekday, position, staff on duty and recent service times.
+These are the features the proposal lists for the model (time of day, weekday, position, staff on duty and recent service times), plus `arrived_ahead` and the arrival rate, which Joseph asked for in his review of #56.
 
 ## Output
 
 A `WaitRange` in whole minutes, with `0 <= low_minutes <= high_minutes`. The backend turns it into the contract's `WaitRange` by adding clock times (`expectedFrom = at + low_minutes`). It is always a range, never one number (proposal §5). Each adapter documents how it picks its range.
 
+The naive adapter's range: its point estimate is `w = position × mean_service_minutes ÷ staff_on_duty`. It returns `low = floor(0.75 × w)` and `high = ceil(1.25 × w)`, a band of ±25%. The 25% is a starting guess; the offline evaluation (#9) reports how often real waits fall inside it, and we tune it from that.
+
 ## Speed budget and fallback
 
 - `predict` runs **in-process**: no network call and no disk read per call. Adapters load anything they need once, at start-up.
-- **Budget: under 50 ms at the 95th percentile** (95 calls in 100 finish within it). #51 measures it with a test over 1,000 snapshots.
-- If an adapter raises an error, returns a bad range, or goes over budget, the backend answers with the **naive** adapter instead, sets `method: naive`, and logs why. The naive rule is the fallback because it is plain arithmetic and cannot fail on valid input.
+- **Budget: under 50 ms at the 95th percentile** (95 calls in 100 finish within it). The budget is checked by a test over 1,000 snapshots (#51), run on the demo host too, before an adapter is switched on. A synchronous call can't be stopped halfway, so at run time a slow answer is still used, and the backend logs how long it took.
+- If an adapter raises an error or returns a bad range, the backend answers with the **naive** adapter instead, sets `method: naive`, and logs why. The naive rule is the fallback because it is plain arithmetic and cannot fail on valid input.
 - Which adapter is active is one setting: `PREDICTOR=mmc` (the default), `naive` or `gbm`.
 
 ## The learned model's file
@@ -69,7 +75,7 @@ Serving the model live is a **Should** in the scope cut. Henry's must-have is th
 - `wait_gbm.joblib`: a dict `{"low": model, "high": model}`. Each is a scikit-learn regressor with `.predict(X)`, for example `GradientBoostingRegressor(loss="quantile", alpha=0.25)` for `low` and `alpha=0.75` for `high`.
 - `wait_gbm.json`: the feature order, the scikit-learn version, the training date, and the held-out MAE and share within ±15 minutes.
 
-The feature order is `[position, staff_on_duty, mean_service_minutes, recent_service_rate, hour_of_day, weekday]`. `hour_of_day` is a decimal (9.5 means 09:30), and `weekday` runs from 0 (Monday) to 6.
+The feature order is `[position, arrived_ahead, staff_on_duty, mean_service_minutes, recent_service_rate, arrival_rate_per_hour, hour_of_day, weekday]`. `hour_of_day` is a decimal (9.5 means 09:30), and `weekday` runs from 0 (Monday) to 6.
 
 Two rules come with the file:
 
@@ -83,7 +89,7 @@ Two rules come with the file:
 
 ## Questions for Henry
 
-1. Are these six features (the snapshot's five fields, with `at` split into hour and weekday) the ones your model uses? Is anything missing that the backend can supply?
+1. Are these eight features (the snapshot's seven fields, with `at` split into hour and weekday) the ones your model uses? Is anything missing that the backend can supply?
 2. Is a dict of two quantile models workable, or would you rather ship one point estimate plus an error band?
 3. Which percentiles should make the range? This draft proposes the 25th and 75th.
 4. Is 50 ms at p95 realistic for your model on a laptop?

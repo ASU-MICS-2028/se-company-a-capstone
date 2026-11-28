@@ -30,6 +30,7 @@ New file `docs/architecture/predictor-interface.md`. It defines the one port the
 | Part of the change | Tool | What the AI did | What a person checked or changed |
 |---|---|---|---|
 | `predictor-interface.md` | Claude Code | Wrote the doc from Eric's notes and the proposal, including the model-file rules and the questions for Henry | not yet checked |
+| Review changes (28 Nov) | Claude Code | Applied Joseph's review of #56: added `arrival_rate_per_hour` and `arrived_ahead`, defined the naive band (±25%) and the start-of-day service time (17.5 minutes, from survey F9), and changed the speed budget to a pre-release test plus logging, because a synchronous call can't be stopped. Ran the port's code block with a sample snapshot | not yet checked |
 
 ## How to check it
 
