@@ -15,13 +15,23 @@ export function useQueue(api: TwenApi = defaultApi, refreshMs = 15_000) {
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
   const [refreshError, setRefreshError] = useState(false)
   const latest = useRef(0)
+  // The log only grows, so after the first load ask only for events newer than the last one we have.
+  const events = useRef<QueueEvent[]>([])
 
   const load = useCallback(async () => {
     const call = ++latest.current
     try {
-      const [clinic, queue, events] = await Promise.all([api.getClinic(CLINIC_ID), api.getQueue(CLINIC_ID, ALL), api.listEvents(CLINIC_ID)])
+      const lastSeq = events.current.at(-1)?.seq
+      const [clinic, queue, fresh] = await Promise.all([
+        api.getClinic(CLINIC_ID),
+        api.getQueue(CLINIC_ID, ALL),
+        api.listEvents(CLINIC_ID, lastSeq),
+      ])
       if (call !== latest.current) return // an older request finished late; ignore it
-      setState({ kind: 'ready', clinic, tickets: queue.tickets, events, updatedAt: queue.generatedAt })
+      // Skip any event we already hold, in case two refreshes overlapped.
+      const top = events.current.at(-1)?.seq ?? -Infinity
+      events.current = [...events.current, ...fresh.filter((e) => e.seq > top)]
+      setState({ kind: 'ready', clinic, tickets: queue.tickets, events: events.current, updatedAt: queue.generatedAt })
       setRefreshError(false)
     } catch (e) {
       if (call !== latest.current) return

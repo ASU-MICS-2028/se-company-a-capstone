@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api as defaultApi, CLINIC_ID, newIdempotencyKey, type TwenApi } from '../api/client'
 import { ApiError, type Channel, type OverrideInput, type Ticket } from '../api/types'
 import { formatDay, formatRange, formatTime } from '../lib/format'
@@ -37,6 +37,20 @@ export function QueuePage({ api = defaultApi, refreshMs, now = Date.now }: Props
   const [moving, setMoving] = useState<Ticket | null>(null)
   const opener = useRef<HTMLElement | null>(null)
   const feedbackRef = useRef<HTMLParagraphElement>(null)
+  // True while an action is on its way. A ref, not state, so two taps in the same moment both see it.
+  const inFlight = useRef(false)
+  const confirmRef = useRef<HTMLButtonElement>(null)
+  // After "Keep", focus goes back to that row's "Mark missed" button instead of being lost.
+  const [returnTo, setReturnTo] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (confirmMissed) confirmRef.current?.focus()
+  }, [confirmMissed])
+  useEffect(() => {
+    if (!returnTo) return
+    document.querySelector<HTMLElement>(`[data-missed-for="${returnTo}"]`)?.focus()
+    setReturnTo(null)
+  }, [returnTo])
 
   const all = useMemo(() => (state.kind === 'ready' ? state.tickets : []), [state])
   const byChannel = useMemo(() => all.filter((t) => channel === 'all' || t.channel === channel), [all, channel])
@@ -53,7 +67,8 @@ export function QueuePage({ api = defaultApi, refreshMs, now = Date.now }: Props
    */
   async function run<T>(id: string, act: (key: string) => Promise<T>, done: (result: T) => Feedback) {
     // Buttons stay focusable while busy (aria-disabled), so a second tap is ignored here instead.
-    if (busy !== null) return false
+    if (inFlight.current) return false
+    inFlight.current = true
     const key = newIdempotencyKey()
     setBusy(id)
     setFeedback(null)
@@ -72,6 +87,7 @@ export function QueuePage({ api = defaultApi, refreshMs, now = Date.now }: Props
       setFeedback({ text: `That didn’t work. ${why}`, urgent: true })
       return false
     } finally {
+      inFlight.current = false
       setBusy(null)
       setConfirmMissed(null)
       await reload()
@@ -204,10 +220,14 @@ export function QueuePage({ api = defaultApi, refreshMs, now = Date.now }: Props
                             <div className="actions">
                               {confirmMissed === t.id ? (
                                 <>
-                                  <button type="button" className="btn btn--small btn--urgent" aria-disabled={busy !== null} onClick={() => void markMissed(t)}>
+                                  <button ref={confirmRef} type="button" className="btn btn--small btn--urgent" aria-disabled={busy !== null} onClick={() => void markMissed(t)}>
                                     Yes, mark {t.code} missed
                                   </button>
-                                  <button type="button" className="btn btn--small btn--ghost" onClick={() => setConfirmMissed(null)}>
+                                  <button type="button" className="btn btn--small btn--ghost" onClick={() => {
+                                      setConfirmMissed(null)
+                                      setReturnTo(t.id)
+                                    }}
+                                  >
                                     Keep
                                   </button>
                                 </>
@@ -309,6 +329,7 @@ function ActionButton({ action, ticket, disabled, onCheckIn, onDone, onMissed, o
       className={`btn btn--small ${kind}`}
       aria-disabled={disabled}
       aria-label={`${label} ${ticket.code}`}
+      data-missed-for={action === 'missed' ? ticket.id : undefined}
       onClick={(e) => onClick(e.currentTarget)}
     >
       {label}

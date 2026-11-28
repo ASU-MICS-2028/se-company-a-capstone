@@ -67,6 +67,18 @@ describe('staff actions', () => {
     expect(log()).toHaveTextContent('B-005 marked missed.')
   })
 
+  it('keeps keyboard focus: on the confirm button, then back on Mark missed after Keep', async () => {
+    const { user } = await setup()
+    await user.click(screen.getByRole('button', { name: 'Mark missed B-005' }))
+    expect(screen.getByRole('button', { name: 'Yes, mark B-005 missed' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Keep' }))
+    expect(screen.getByRole('button', { name: 'Mark missed B-005' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Mark missed B-005' }))
+    await user.keyboard('{Enter}')
+    expect(within(row('B-005')).getByText('Missed')).toBeInTheDocument()
+    expect(feedback()).toHaveFocus()
+  })
+
   it('offers Mark missed for a booked patient only once they are late, never when the text failed', async () => {
     const tickets = seedTickets(NOW)
     const late = tickets.find((t) => t.code === 'B-009')!
@@ -153,11 +165,44 @@ describe('move up', () => {
     expect(opener).toHaveFocus()
   })
 
+  it('cannot be closed while the move is still on its way', async () => {
+    const good = createMockApi({ delayMs: 0, now })
+    let release!: () => void
+    const gate = new Promise<void>((r) => (release = r))
+    const slow: TwenApi = { ...good, overridePosition: async (...a) => (await gate, good.overridePosition(...a)) }
+    const { user } = await setup(slow)
+    await user.click(screen.getByRole('button', { name: 'Move up B-013' }))
+    const dialog = screen.getByRole('dialog')
+    await user.selectOptions(within(dialog).getByLabelText('Reason'), 'emergency')
+    await user.click(within(dialog).getByRole('button', { name: 'Move B-013' }))
+    await user.keyboard('{Escape}')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    release()
+    expect(await screen.findByText('B-013 moved to place 1.', { selector: '.feedback' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('keeps Tab inside the dialog', async () => {
     const { user } = await setup()
     await user.click(screen.getByRole('button', { name: 'Move up B-013' }))
     const dialog = screen.getByRole('dialog')
     for (let i = 0; i < 6; i++) await user.tab()
     expect(dialog).toContainElement(document.activeElement as HTMLElement)
+  })
+})
+
+describe('log refresh', () => {
+  it('after the first load, asks only for events newer than the last one it has', async () => {
+    const good = createMockApi({ delayMs: 0, now })
+    const afters: (number | undefined)[] = []
+    const spy: TwenApi = { ...good, listEvents: (c, after) => (afters.push(after), good.listEvents(c, after)) }
+    const { user } = await setup(spy)
+    await user.click(screen.getByRole('button', { name: 'Check in B-011' }))
+    await user.click(screen.getByRole('button', { name: 'Mark done B-004' }))
+    expect(afters[0]).toBeUndefined()
+    expect(afters.at(-1)).toBeGreaterThan(0)
+    expect(log()).toHaveTextContent('B-011 checked in.')
+    expect(log()).toHaveTextContent('B-004 marked done.')
   })
 })
