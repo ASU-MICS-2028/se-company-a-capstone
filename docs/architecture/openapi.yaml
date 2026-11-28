@@ -1,20 +1,32 @@
 openapi: 3.1.0
 info:
   title: Twɛn Queue API
-  version: 0.1.0-draft
-  summary: Virtual OPD queue for one clinic. USSD and desk tickets, a staff board, and "come now" SMS.
+  version: 0.2.0
+  summary: Virtual OPD queue for one clinic. USSD, web and desk tickets, a staff board, and "come now" SMS.
   description: |
-    **Status:** a draft for Eric (#7) to review. It follows the proposed scope cut
-    (decisions/2026-11-23-cut-scope-to-fit-milestone-2.md): one clinic, USSD and desk tickets,
-    an online staff board, an SMS outbox, and predicted waits from the baselines.
+    **Status:** v0.2 (#44). It is frozen once Kobina (#10), Henry (#9) and Joseph (#12) approve its pull request.
+    After that, any change needs a `decisions/` file and a version bump. It follows the proposed scope cut
+    (decisions/2026-11-23-cut-scope-to-fit-milestone-2.md, with web booking kept by #58): one clinic, USSD, web
+    and desk tickets, an online staff board, an SMS outbox, and predicted waits from the baselines.
 
     **Conventions**
     - Times are ISO 8601 in UTC. Durations are whole minutes.
-    - Phone numbers are accepted in E.164 format, stored as given, and never returned in full. Responses carry `phoneMasked`.
+    - Phone numbers are accepted in E.164 format, stored as given, and never returned in full. Responses carry `phoneMasked`: the first four characters, a space, the next two digits, a `*` for each later digit except the last two, then the last two. So `+233244000111` becomes `+233 24*****11`.
+    - The web join accepts Ghana mobile numbers only (`+233` and nine digits), because every number it accepts gets texted. Desk and USSD numbers can be any E.164 number.
+    - A phone number has at most one active ticket (`waiting`, `notified`, `arrived` or `called`) per clinic, whichever channel issued it. So the USSD menu's "Check my ticket" also finds a web or desk ticket.
     - Every state change appends an event to the clinic's event log. The board polls `GET /clinics/{clinicId}/events?after=`.
-    - POSTs that create something accept an `Idempotency-Key` header. Repeating a key returns the first result.
     - Errors use `application/problem+json` (RFC 9457).
     - Staff endpoints need a bearer token with the `staff` role. The USSD and SMS callbacks are authenticated by a shared secret in the URL path, configured with the gateway.
+    - The two patient web endpoints (tag `patient`) need no login. They are rate-limited, with the numbers set in backend configuration (#59) rather than in this contract, so tuning them is not a contract change. Over a limit they answer 429 with `Retry-After`:
+      - `joinFromWeb` counts per client IP address and per phone number, and has a daily cap on web tickets per clinic. Once the cap is reached it answers 429 until midnight clinic time. USSD and desk tickets still work.
+      - `getWebTicket` counts per client IP address.
+
+    **Safe to repeat.** Clinics have weak networks, so every staff write can be retried without harm:
+    - Every staff write accepts an `Idempotency-Key` header. Repeating a key with the same request returns the first response. Reusing a key for a different request returns 422. Keys are kept for 24 hours.
+    - A ticket move is also safe without a key. If the ticket is already in the requested state, or has passed it on the normal path (for example, `arrived` on a ticket that is now `called`), the response is 200 with the ticket unchanged. Only a move the state table forbids returns 409.
+    - `call-next` and `recall` are the exceptions: they are not repeatable by nature (a repeat could call or recall a second time), so the board sends a fresh key for each tap and reuses it only when retrying that tap.
+
+    **Ticket codes** look like `B-047`: the clinic's one-letter prefix and a three-digit counter. The counter starts at 001 each day at midnight in the clinic's time zone (Africa/Accra, UTC+0), so a code is unique within one clinic and one day. The ceiling is 999 tickets per clinic per day.
 
     **Items marked `x-scope: should`** are designed now so the contract doesn't change later. They are built only if time allows.
 servers:
@@ -31,6 +43,8 @@ tags:
     description: Callbacks from the USSD and SMS provider (Africa's Talking sandbox)
   - name: clinic
     description: Clinic settings and service status
+  - name: patient
+    description: The patient's web page, with no login. Join the queue, then follow the ticket.
 
 paths:
   /health:
@@ -38,21 +52,21 @@ paths:
       tags: [health]
       operationId: getHealth
       summary: Liveness and database check
+      description: Takes no input, so it has no client errors. The linter's "needs a 4xx" warning is ignored on purpose in `.redocly.lint-ignore.yaml`.
       security: []
       responses:
-        "503":
-          description: Database unreachable
         "200":
-          description: Up
+          description: Up, and the database answers
           content:
             application/json:
-              schema:
-                type: object
-                required: [status, database]
-                properties:
-                  status: { type: string, enum: [ok] }
-                  database: { type: string, enum: [ok, down] }
+              schema: { $ref: "#/components/schemas/Health" }
               example: { status: ok, database: ok }
+        "503":
+          description: The process is up but the database is unreachable. Same body, so monitoring can tell the two apart.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+              example: { status: ok, database: down }
 
   /clinics/{clinicId}:
     parameters: [ { $ref: "#/components/parameters/clinicId" } ]
@@ -70,11 +84,37 @@ paths:
               example:
                 id: demo-opd
                 name: Demo District Hospital OPD
+                ticketPrefix: B
                 staffOnDuty: 3
+                graceMinutes: 20
                 meanServiceMinutes: 5
                 waitingCount: 27
                 status: { prescriberIn: true, note: null, updatedAt: "2026-11-30T07:02:00Z" }
         "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [clinic]
+      operationId: updateClinicSettings
+      summary: Set staff on duty and the hold window
+      description: |
+        Staff change who is on duty during the day, and the predicted waits follow (`staffOnDuty` is the c in M/M/c).
+        Send only the fields that change. Appends a `settings_changed` event with the old and new values.
+      security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClinicSettingsInput" }
+            example: { staffOnDuty: 2 }
+      responses:
+        "200":
+          description: The updated clinic
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Clinic" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Invalid" }
 
   /clinics/{clinicId}/status:
     parameters: [ { $ref: "#/components/parameters/clinicId" } ]
@@ -82,9 +122,10 @@ paths:
       tags: [clinic]
       operationId: setServiceStatus
       summary: Set today's service status (for example, prescriber away)
-      description: Research finding F1. One step for staff. It is shown in the USSD menu and added to SMS messages.
+      description: Research finding F1. One step for staff. It is shown in the USSD menu and added to SMS messages. Appends a `status_changed` event.
       x-scope: should
       security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       requestBody:
         required: true
         content:
@@ -98,6 +139,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ServiceStatus" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Invalid" }
 
   /clinics/{clinicId}/tickets:
     parameters: [ { $ref: "#/components/parameters/clinicId" } ]
@@ -106,8 +148,17 @@ paths:
       operationId: createTicket
       summary: Issue a ticket at the desk
       description: |
-        Used by staff for a patient at the desk, including patients with no phone. USSD tickets are created through `/gateway/ussd`.
-        Desk and USSD tickets join one queue in the order they are issued (fairness, proposal §9).
+        Used by staff for a patient at the desk, including patients with no phone. USSD tickets are created through
+        `/gateway/ussd` and web tickets through `/clinics/{clinicId}/web-tickets`. All three join one queue in the
+        order they are issued (fairness, proposal §9).
+
+        A desk ticket starts as `arrived`, because the patient is standing at the desk. If the patient has a phone and
+        wants to leave and come back, staff set `waitOffSite: true` with a travel band: the ticket then starts as
+        `waiting` and gets the "come now" SMS like a USSD ticket.
+
+        If the phone already has an active ticket, the 409 names that ticket (`ticketId` and `code`), because staff
+        are signed in. If it is not the patient's ticket (someone typed their number on the web), staff cancel it and
+        issue the desk ticket again.
       security: [ { staffToken: [] } ]
       parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       requestBody:
@@ -116,8 +167,8 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/DeskTicketInput" }
             examples:
-              withPhone: { value: { phone: "+233244000111", travelBand: "15_30", language: tw } }
-              noPhone: { value: { phone: null, travelBand: null, language: en } }
+              staysAtClinic: { value: { phone: null, travelBand: null, language: en, waitOffSite: false } }
+              comesBackLater: { value: { phone: "+233244000111", travelBand: "15_30", language: tw, waitOffSite: true } }
       responses:
         "201":
           description: Ticket issued
@@ -125,6 +176,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Ticket" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/PhoneHasTicketAtDesk" }
         "422": { $ref: "#/components/responses/Invalid" }
 
   /clinics/{clinicId}/queue:
@@ -137,7 +189,7 @@ paths:
       parameters:
         - name: status
           in: query
-          description: Filter by status. Defaults to all active tickets (waiting, notified, called, arrived).
+          description: Filter by status. Defaults to all active tickets (waiting, notified, arrived, called).
           schema:
             type: array
             items: { $ref: "#/components/schemas/TicketStatus" }
@@ -164,8 +216,11 @@ paths:
     post:
       tags: [board]
       operationId: callNext
-      summary: Call the next patient
-      description: Marks the first ticket in calling order as `called`. If no one is waiting, returns 204.
+      summary: Call the next patient who is here
+      description: |
+        Marks the first **arrived** ticket in calling order as `called`. Tickets ahead of it that are still travelling
+        (`waiting` or `notified`) keep their place, so staff never call someone who is not in the building.
+        Returns 204 if no one has arrived. Send a fresh `Idempotency-Key` for each tap (see "Safe to repeat").
       security: [ { staffToken: [] } ]
       parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       responses:
@@ -174,8 +229,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Ticket" }
-        "204": { description: Queue empty }
+        "204": { description: Nobody has arrived }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Invalid" }
 
   /clinics/{clinicId}/events:
     parameters: [ { $ref: "#/components/parameters/clinicId" } ]
@@ -219,6 +275,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Ticket" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
 
   /tickets/{ticketId}/arrived:
@@ -227,10 +284,15 @@ paths:
       tags: [board]
       operationId: markArrived
       summary: Patient checked in at the clinic
-      description: The time between the SMS and check-in is recorded for learned travel time later (a Could).
+      description: |
+        Allowed from `waiting` (came early) or `notified`. The ticket keeps its place in calling order.
+        The time between the SMS and check-in is recorded for learned travel time later (a Could).
       security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       responses:
         "200": { $ref: "#/components/responses/TicketOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
 
   /tickets/{ticketId}/seen:
@@ -239,9 +301,13 @@ paths:
       tags: [board]
       operationId: markSeen
       summary: Consultation done; the ticket leaves the queue
+      description: Allowed from `called`.
       security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       responses:
         "200": { $ref: "#/components/responses/TicketOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
 
   /tickets/{ticketId}/no-show:
@@ -249,10 +315,38 @@ paths:
     post:
       tags: [board]
       operationId: markNoShow
-      summary: Called but not present
+      summary: Patient did not come, or did not answer when called
+      description: |
+        Allowed from `notified` or `called`. Always a staff decision, never automatic. The board shows a notified
+        ticket as late once `holdUntil` has passed, and shows a delayed or failed SMS, so staff can hold the place
+        instead (proposal use case, step 6).
       security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       responses:
         "200": { $ref: "#/components/responses/TicketOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /tickets/{ticketId}/recall:
+    parameters: [ { $ref: "#/components/parameters/ticketId" } ]
+    post:
+      tags: [board]
+      operationId: recallTicket
+      summary: The patient did not answer the call; call them again later
+      description: |
+        Allowed from `called`. The ticket goes back to `arrived`, behind every ticket that is `arrived` at that moment,
+        so staff call the patients who are present first, then this patient again (survey results in #69, F13 and B6).
+        Staff can recall a ticket more than once, or mark it a no-show instead. `calledAt` keeps the latest call; the
+        event log keeps every call and recall.
+
+        Not repeatable by nature: send a fresh `Idempotency-Key` for each tap (see "Safe to repeat").
+      security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
+      responses:
+        "200": { $ref: "#/components/responses/TicketOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
 
   /tickets/{ticketId}/override:
@@ -260,17 +354,27 @@ paths:
     post:
       tags: [board]
       operationId: overridePosition
-      summary: Staff move a patient ahead (priority or emergency). A reason is required, and it is logged.
-      description: Priority is always a staff decision (proposal §3, §9). Emergencies use this to bypass the queue (finding F4).
+      summary: Staff move a patient ahead for a priority group or an emergency. A reason from a fixed list is required, and it is logged.
+      description: |
+        Priority is always a staff decision (proposal §3, §9). Emergencies use this to bypass the queue (finding F4).
+        Allowed from `waiting`, `notified` or `arrived`. The `override` event records the staff user in `actorId`.
+
+        The reasons are a fixed list, so the clinic's priority rules apply the same way to everyone (survey results in
+        #69, F12). `correction` (fixing a mistake) needs a `note`, or the request is refused with 422. A reason is a
+        queue category, not a diagnosis: it appears only on staff endpoints and in the event log, never on the patient
+        page, USSD or SMS.
       security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/OverrideInput" }
-            example: { reason: priority, toPosition: 1, note: null }
+            example: { reason: pregnant, toPosition: 1, note: null }
       responses:
         "200": { $ref: "#/components/responses/TicketOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/Invalid" }
 
@@ -280,10 +384,77 @@ paths:
       tags: [board]
       operationId: cancelTicket
       summary: Remove a ticket (patient left, or issued by mistake)
+      description: Allowed from `waiting`, `notified` or `arrived`. Patients can also cancel from the USSD menu.
       security: [ { staffToken: [] } ]
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
       responses:
         "200": { $ref: "#/components/responses/TicketOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/Conflict" }
+
+  /clinics/{clinicId}/web-tickets:
+    parameters: [ { $ref: "#/components/parameters/clinicId" } ]
+    post:
+      tags: [patient]
+      operationId: joinFromWeb
+      summary: Join the queue from the patient web page
+      description: |
+        No login. The ticket behaves like a USSD ticket: it starts as `waiting`, takes its place in the same queue,
+        and gets the "come now" SMS when its turn nears. Its `joined` event has `actor: patient` and `actorId: null`.
+        The phone number never goes into an event.
+
+        **The phone number is not verified** here ([decision](../../decisions/2026-11-24-treat-web-phone-numbers-as-unverified.md)), unlike USSD, where the network supplies it. So:
+        - If the number already has an active ticket, the answer is 409 and says nothing about that ticket. The
+          patient finds it by USSD ("Check my ticket"), which proves they hold the phone.
+        - A reply lost on a weak network is recovered with `Idempotency-Key`: the page makes one key per form
+          submission and reuses it when retrying, so the retry returns the same ticket instead of 409.
+
+        The response carries the ticket `id`, which the page puts in its status link (`GET /web-tickets/{ticketId}`).
+      security: []
+      parameters: [ { $ref: "#/components/parameters/idempotencyKey" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebTicketInput" }
+            example: { phone: "+233244000111", travelBand: "30_60", language: tw }
+      responses:
+        "201":
+          description: Ticket issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTicket" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/PhoneHasTicket" }
+        "422": { $ref: "#/components/responses/Invalid" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /web-tickets/{ticketId}:
+    parameters: [ { $ref: "#/components/parameters/ticketId" } ]
+    get:
+      tags: [patient]
+      operationId: getWebTicket
+      summary: The patient's view of a web ticket, for the status page to poll
+      description: |
+        No login. The ticket `id` is a random UUID (version 4, never sequential) and works as the key to this page:
+        anyone with the link sees the fields of `PublicTicket` and nothing else (no full phone, no events, no other
+        patients). Ids of USSD and desk tickets return 404, so only web tickets have a public page.
+
+        A ticket's page works on the day the ticket was issued. From midnight clinic time it returns 404, the same as
+        an unknown id, so an old link shows nothing, and an old code (the counter starts again each day) is never
+        mixed up with a new one.
+
+        The page polls at most every 30 seconds; the wait range changes slowly.
+      security: []
+      responses:
+        "200":
+          description: The ticket, as the patient sees it
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTicket" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /gateway/{secret}/ussd:
     parameters: [ { $ref: "#/components/parameters/gatewaySecret" } ]
@@ -293,15 +464,25 @@ paths:
       summary: USSD session callback (Africa's Talking format)
       description: |
         The provider posts once for each step of the session. `text` is the user's inputs so far, joined by `*`.
-        Reply with plain text: `CON …` to show a menu, or `END …` to finish.
+        Reply with plain text: `CON ...` to show a menu, or `END ...` to finish.
 
-        Menu (draft):
+        Menu:
         1. Language: 1 English, 2 Twi
         2. Show the clinic's service status (Should), then: 1 Join queue, 2 Check my ticket
-        3. Join → "How long does it take you to get here, including waiting for transport?" 1 Under 15 min, 2 15–30, 3 30–60, 4 Over 1 hour
+        3. Join: "How long does it take you to get here, including waiting for transport?" 1 Under 15 min, 2 15-30 min, 3 30-60 min, 4 Over 1 hour
         4. END with ticket code, position and expected time range, and "We will SMS you when to leave."
+        5. Check my ticket: code, position and expected time range, then 1 Cancel my ticket
 
         Dialling again with the same phone returns the existing active ticket instead of issuing a second one.
+        A repeated or retried request for the same session step never creates a second ticket.
+
+        **Length.** Every reply, including the `CON ` or `END ` prefix, is at most 160 characters. Write menus with
+        plain hyphens and "Twen" (not dashes or "Twɛn"), so English text stays in the GSM 7-bit alphabet. Twi needs
+        ɛ and ɔ, which are outside it, and on some networks that cuts the space sharply. Check every Twi screen in
+        the sandbox (#53) and shorten it if needed.
+
+        **Secret.** Compare the path secret in constant time. Access logs must record the route template
+        (`/gateway/{secret}/ussd`), never the raw path, so the secret never reaches a log.
       security: []
       requestBody:
         required: true
@@ -321,9 +502,9 @@ paths:
           description: Next screen
           content:
             text/plain:
-              schema: { type: string }
+              schema: { type: string, maxLength: 160 }
               examples:
-                menu: { value: "CON Twɛn: Demo District Hospital OPD\n1. Join the queue\n2. Check my ticket" }
+                menu: { value: "CON Twen: Demo District Hospital OPD\n1. Join the queue\n2. Check my ticket" }
                 done: { value: "END Ticket B-047. 26th in line. Expected 10:30-11:00. We will SMS you when to leave." }
         "403": { description: Wrong gateway secret }
 
@@ -333,7 +514,15 @@ paths:
       tags: [gateway]
       operationId: smsDeliveryReport
       summary: SMS delivery report (Africa's Talking format)
-      description: Updates the outbox message status. A failure is retried by the worker with backoff.
+      description: |
+        Updates the outbox message and the ticket's `smsStatus`, and appends an `sms_updated` event so the board refreshes.
+        - `Success` becomes `delivered`.
+        - `Failed` or `Rejected` becomes `failed`. The worker retries with backoff, which sets the ticket back to `queued`.
+        - Any other status (for example `Buffered`) becomes `sent`.
+
+        A late report never moves a message backwards (a `Buffered` report after `Success` is ignored).
+        A report for an unknown message ID is logged and answered with 200, so the provider stops retrying.
+        The path secret is handled as in `/gateway/{secret}/ussd`.
       security: []
       requestBody:
         required: true
@@ -356,7 +545,7 @@ components:
     staffToken:
       type: http
       scheme: bearer
-      description: A staff session token. Issuing tokens (login) is out of scope for the demo; a seeded token is used.
+      description: A staff session token, tied to one staff user (recorded as `actorId` on events). Issuing tokens (login) is out of scope for the demo; seeded tokens are used.
 
   parameters:
     clinicId:
@@ -373,18 +562,18 @@ components:
       name: secret
       in: path
       required: true
-      description: A shared secret configured in the gateway's callback URL
+      description: A shared secret configured in the gateway's callback URL. Never logged.
       schema: { type: string }
     idempotencyKey:
       name: Idempotency-Key
       in: header
       required: false
-      description: Any unique string. Repeating it returns the first response instead of acting twice.
+      description: Any unique string, such as a UUID made by the board or the patient page. Repeating it with the same request returns the first response instead of acting twice. Reusing it for a different request returns 422. Kept for 24 hours.
       schema: { type: string, maxLength: 128 }
 
   responses:
     TicketOk:
-      description: The updated ticket
+      description: The ticket, after the move (or unchanged, if it had already made that move)
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Ticket" }
@@ -399,30 +588,78 @@ components:
         application/problem+json:
           schema: { $ref: "#/components/schemas/Problem" }
     Conflict:
-      description: Not allowed from the ticket's current status (for example, marking a `seen` ticket as a no-show)
+      description: The state table does not allow this move from the ticket's current status (for example, marking a `seen` ticket as a no-show)
       content:
         application/problem+json:
           schema: { $ref: "#/components/schemas/Problem" }
           example: { type: "about:blank", title: Invalid transition, status: 409, detail: "Ticket B-047 is 'seen'; cannot mark no-show." }
+    PhoneHasTicket:
+      description: This phone number already has an active ticket at this clinic. The reply does not say which one.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+          example: { type: "about:blank", title: Phone already has a ticket, status: 409, detail: "This number is already in the queue. Dial the USSD code and choose Check my ticket." }
+    PhoneHasTicketAtDesk:
+      description: This phone number already has an active ticket at this clinic. Staff are signed in, so the reply names it.
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/PhoneHasTicketProblem" }
+          example: { type: "about:blank", title: Phone already has a ticket, status: 409, detail: "This number already holds ticket B-052.", ticketId: 8b2e4f10-1c7d-4a9e-b3f2-5d6a7e8c9f01, code: B-052 }
+    TooManyRequests:
+      description: Too many requests from this client. Try again after `Retry-After` seconds.
+      headers:
+        Retry-After:
+          description: Seconds to wait before trying again
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
     Invalid:
-      description: Validation failed
+      description: Validation failed, or an `Idempotency-Key` was reused for a different request
       content:
         application/problem+json:
           schema: { $ref: "#/components/schemas/Problem" }
 
   schemas:
+    Health:
+      type: object
+      required: [status, database]
+      properties:
+        status: { type: string, enum: [ok], description: Always ok when the process answers }
+        database: { type: string, enum: [ok, down] }
+
     TicketStatus:
       type: string
       description: |
-        waiting → notified (the "come now" SMS was queued) → called → arrived → seen.
-        From any active state: no_show (after being called) or cancelled.
-        Desk tickets with no phone skip `notified`.
-      enum: [waiting, notified, called, arrived, seen, no_show, cancelled]
+        The normal path is `waiting → notified → arrived → called → seen`. A patient must arrive before being called.
+
+        | From | Can move to | Who |
+        |---|---|---|
+        | `waiting` | `notified` (the "come now" SMS was queued), `arrived`, `cancelled` | system; staff; staff or patient |
+        | `notified` | `arrived`, `no_show`, `cancelled` | staff; staff; staff or patient |
+        | `arrived` | `called` (by call-next), `cancelled` | staff |
+        | `called` | `seen`, `no_show`, `arrived` (recall: did not answer, called again later) | staff |
+        | `seen`, `no_show`, `cancelled` | nothing: the ticket is closed | |
+
+        Desk tickets start as `arrived`, unless issued with `waitOffSite: true`. A ticket keeps its place in calling
+        order while it is `waiting`, `notified` or `arrived`; only `arrived` tickets can be called. A recalled ticket goes
+        back to `arrived`, behind every ticket that is `arrived` at that moment.
+      enum: [waiting, notified, arrived, called, seen, no_show, cancelled]
 
     TravelBand:
       type: [string, "null"]
-      description: The travel time the patient picked, including waiting for transport (finding F2). Null for desk tickets with no phone.
+      description: |
+        The travel time the patient picked, including waiting for transport (finding F2). Null for desk tickets of
+        patients who stay at the clinic. For `holdUntil`, the upper ends are 15, 30 and 60 minutes, and 90 for `over_60`.
       enum: [under_15, "15_30", "30_60", over_60, null]
+
+    SmsStatus:
+      type: [string, "null"]
+      description: |
+        Where the "come now" SMS is. Null if the ticket has had no SMS. It moves forward only
+        (`queued → sent → delivered` or `failed`), except that a retry after a failure sets it back to `queued`.
+        The board shows `queued` for more than a few minutes, or `failed`, as a delayed text, so staff hold the place.
+      enum: [queued, sent, delivered, failed, null]
 
     Language:
       type: string
@@ -431,7 +668,7 @@ components:
 
     WaitRange:
       type: object
-      description: Shown as a range, never a single time (proposal §5, honest uncertainty).
+      description: Shown as a range, never a single time (proposal §5, honest uncertainty). Produced by the predictor port (docs/architecture/predictor-interface.md, #46).
       required: [lowMinutes, highMinutes, expectedFrom, expectedTo, method]
       properties:
         lowMinutes: { type: integer, minimum: 0 }
@@ -445,17 +682,21 @@ components:
 
     Ticket:
       type: object
-      required: [id, code, clinicId, channel, status, issuedAt, language]
+      required: [id, code, clinicId, channel, status, issuedAt, language, smsStatus, holdUntil]
       properties:
         id: { type: string, format: uuid }
-        code: { type: string, description: Short code read aloud and shown on SMS, examples: ["B-047"] }
+        code:
+          type: string
+          pattern: "^[A-Z]-[0-9]{3}$"
+          description: Short code read aloud and shown on SMS. Unique within one clinic and one day (see "Ticket codes").
+          examples: ["B-047"]
         clinicId: { type: string }
-        channel: { type: string, enum: [ussd, desk] }
+        channel: { type: string, enum: [ussd, web, desk] }
         status: { $ref: "#/components/schemas/TicketStatus" }
         position:
           type: [integer, "null"]
           minimum: 1
-          description: 1 means next to be called. Null once the ticket is called or closed.
+          description: 1 means first in calling order. Counts `waiting`, `notified` and `arrived` tickets. Null while the ticket is `called`, and once it is closed.
         phoneMasked: { type: [string, "null"], examples: ["+233 24*****11"] }
         travelBand: { $ref: "#/components/schemas/TravelBand" }
         language: { $ref: "#/components/schemas/Language" }
@@ -463,10 +704,20 @@ components:
           oneOf:
             - $ref: "#/components/schemas/WaitRange"
             - type: "null"
+          description: Null when no staff are on duty, while the ticket is `called`, and once it is closed.
+        smsStatus: { $ref: "#/components/schemas/SmsStatus" }
+        smsUpdatedAt: { type: [string, "null"], format: date-time }
+        holdUntil:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            How long a notified patient's place is held before the board shows them as late. Set when the SMS is first
+            marked `sent`: that time, plus the upper end of the travel band, plus the clinic's `graceMinutes`. It counts
+            from sending, not queueing, so a delayed text never costs the patient time. Null until then.
         issuedAt: { type: string, format: date-time }
         notifiedAt: { type: [string, "null"], format: date-time, description: When the "come now" SMS was queued }
-        calledAt: { type: [string, "null"], format: date-time }
         arrivedAt: { type: [string, "null"], format: date-time }
+        calledAt: { type: [string, "null"], format: date-time }
         closedAt: { type: [string, "null"], format: date-time }
         overridden: { type: boolean, default: false, description: True if staff ever moved it }
       example:
@@ -474,18 +725,59 @@ components:
         code: B-047
         clinicId: demo-opd
         channel: ussd
-        status: waiting
-        position: 26
+        status: notified
+        position: 4
         phoneMasked: "+233 24*****11"
         travelBand: "30_60"
         language: tw
-        predictedWait: { lowMinutes: 125, highMinutes: 155, expectedFrom: "2026-11-30T10:30:00Z", expectedTo: "2026-11-30T11:00:00Z", method: mmc }
+        predictedWait: { lowMinutes: 20, highMinutes: 35, expectedFrom: "2026-11-30T10:30:00Z", expectedTo: "2026-11-30T10:45:00Z", method: mmc }
+        smsStatus: delivered
+        smsUpdatedAt: "2026-11-30T09:41:00Z"
+        holdUntil: "2026-11-30T11:00:00Z"
         issuedAt: "2026-11-30T08:25:00Z"
-        notifiedAt: null
-        calledAt: null
+        notifiedAt: "2026-11-30T09:40:00Z"
         arrivedAt: null
+        calledAt: null
         closedAt: null
         overridden: false
+
+    PublicTicket:
+      type: object
+      description: What the patient's web page may see. A subset of `Ticket`, and each field means the same as there.
+      required: [id, code, status, position, predictedWait, holdUntil, travelBand, phoneMasked]
+      properties:
+        id: { type: string, format: uuid, description: "Also the key to the status page, so the link should stay private." }
+        code: { $ref: "#/components/schemas/Ticket/properties/code" }
+        status: { $ref: "#/components/schemas/TicketStatus" }
+        position: { $ref: "#/components/schemas/Ticket/properties/position" }
+        predictedWait: { $ref: "#/components/schemas/Ticket/properties/predictedWait" }
+        holdUntil: { $ref: "#/components/schemas/Ticket/properties/holdUntil" }
+        travelBand:
+          type: string
+          enum: [under_15, "15_30", "30_60", over_60]
+          description: The band the patient picked when joining, so the page can say when to leave. Never null for a web ticket.
+        phoneMasked: { type: string, examples: ["+233 24*****11"] }
+      example:
+        id: 8b2e4f10-1c7d-4a9e-b3f2-5d6a7e8c9f01
+        code: B-052
+        status: waiting
+        position: 18
+        predictedWait: { lowMinutes: 70, highMinutes: 95, expectedFrom: "2026-11-30T10:05:00Z", expectedTo: "2026-11-30T10:30:00Z", method: mmc }
+        holdUntil: null
+        travelBand: "30_60"
+        phoneMasked: "+233 24*****11"
+
+    WebTicketInput:
+      type: object
+      required: [phone, travelBand, language]
+      additionalProperties: false
+      properties:
+        phone: { type: string, pattern: "^\\+233[0-9]{9}$", description: "A Ghana mobile number: +233 and nine digits. Not verified (see joinFromWeb)." }
+        travelBand:
+          type: string
+          enum: [under_15, "15_30", "30_60", over_60]
+          description: The same bands as `TravelBand`, but required, so the hold window can be set.
+        language: { $ref: "#/components/schemas/Language" }
 
     DeskTicketInput:
       type: object
@@ -494,14 +786,23 @@ components:
         phone: { type: [string, "null"], pattern: "^\\+[1-9][0-9]{7,14}$", description: "E.164. Null for patients with no phone." }
         travelBand: { $ref: "#/components/schemas/TravelBand" }
         language: { $ref: "#/components/schemas/Language" }
+        waitOffSite:
+          type: boolean
+          default: false
+          description: True if the patient will leave and come back when texted. Needs `phone` and `travelBand`, or the request is refused with 422.
 
     OverrideInput:
       type: object
       required: [reason, toPosition]
       properties:
-        reason: { type: string, enum: [priority, emergency, correction, other] }
+        reason:
+          type: string
+          enum: [pregnant, older_person, disability, emergency, correction]
+          description: The clinic's fixed priority reasons, plus `correction` for fixing a mistake.
         toPosition: { type: integer, minimum: 1 }
-        note: { type: [string, "null"], maxLength: 200, description: "Optional. Never record symptoms or diagnosis." }
+        note: { type: [string, "null"], maxLength: 200, description: "Required for `correction`, optional otherwise. Never record symptoms or diagnosis." }
+      if: { required: [reason], properties: { reason: { const: correction } } }
+      then: { required: [note], properties: { note: { type: string, minLength: 1 } } }
 
     ServiceStatus:
       type: object
@@ -518,13 +819,23 @@ components:
         prescriberIn: { type: boolean }
         note: { type: [string, "null"], maxLength: 160 }
 
+    ClinicSettingsInput:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        staffOnDuty: { type: integer, minimum: 0, maximum: 50, description: "The c in M/M/c. Zero means no consultations now, and predicted waits become null." }
+        graceMinutes: { type: integer, minimum: 0, maximum: 240, description: Added to the travel band to set `holdUntil` }
+
     Clinic:
       type: object
-      required: [id, name, staffOnDuty, meanServiceMinutes, waitingCount]
+      required: [id, name, ticketPrefix, staffOnDuty, graceMinutes, meanServiceMinutes, waitingCount]
       properties:
         id: { type: string }
         name: { type: string }
-        staffOnDuty: { type: integer, minimum: 0, description: The c in M/M/c }
+        ticketPrefix: { type: string, pattern: "^[A-Z]$", description: The letter that starts this clinic's ticket codes }
+        staffOnDuty: { type: integer, minimum: 0, description: The c in M/M/c. Set with PATCH. }
+        graceMinutes: { type: integer, minimum: 0, description: Added to the travel band to set `holdUntil`. Set with PATCH. A new clinic starts at 20. }
         meanServiceMinutes: { type: number, minimum: 0, description: A rolling mean of recent consultations }
         waitingCount: { type: integer, minimum: 0 }
         status:
@@ -534,20 +845,32 @@ components:
 
     Event:
       type: object
-      description: Append-only. `seq` increases per clinic. Used by the board to refresh and by the evaluation as ground truth.
-      required: [seq, type, ticketId, at]
+      description: Append-only. `seq` increases per clinic. Used by the board to refresh, by the audit trail, and by the evaluation as ground truth.
+      required: [seq, type, ticketId, at, actor, actorId]
       properties:
         seq: { type: integer, minimum: 1 }
         type:
           type: string
-          enum: [joined, notified, called, arrived, seen, no_show, cancelled, override, status_changed]
-        ticketId: { type: [string, "null"], format: uuid, description: Null for status_changed }
+          enum: [joined, notified, arrived, called, recalled, seen, no_show, cancelled, override, sms_updated, status_changed, settings_changed]
+        ticketId: { type: [string, "null"], format: uuid, description: Null for status_changed and settings_changed }
         at: { type: string, format: date-time }
         actor: { type: string, enum: [patient, staff, system] }
+        actorId:
+          type: [string, "null"]
+          description: The staff user who acted, from their token. Null when `actor` is patient or system. Makes every override attributable.
+          examples: ["staff-comfort"]
         data:
           type: object
-          description: Type-specific details, for example an override's `reason` and `fromPosition`/`toPosition`.
+          description: Type-specific details, for example an override's `reason` and `fromPosition`/`toPosition`, a recall's `toPosition`, or a setting's old and new value.
           additionalProperties: true
+      example:
+        seq: 812
+        type: override
+        ticketId: 3f1c2a9e-6a3b-4f1e-9d2a-7c1e8b0a4d55
+        at: "2026-11-30T09:12:00Z"
+        actor: staff
+        actorId: staff-comfort
+        data: { reason: emergency, fromPosition: 9, toPosition: 1 }
 
     Problem:
       type: object
@@ -557,3 +880,13 @@ components:
         title: { type: string }
         status: { type: integer }
         detail: { type: string }
+
+    PhoneHasTicketProblem:
+      description: A `Problem` that also names the ticket the phone already holds. Only the desk endpoint (`createTicket`) uses it.
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          required: [ticketId, code]
+          properties:
+            ticketId: { type: string, format: uuid }
+            code: { $ref: "#/components/schemas/Ticket/properties/code" }
