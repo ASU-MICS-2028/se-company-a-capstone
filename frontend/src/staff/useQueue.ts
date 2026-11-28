@@ -1,27 +1,37 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api as defaultApi, CLINIC_ID, type TwenApi } from '../api/client'
-import type { Clinic, Ticket } from '../api/types'
-import { STATUS_FILTERS } from './status'
+import type { Clinic, QueueEvent, Ticket, TicketStatus } from '../api/types'
 
 export type QueueState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; clinic: Clinic; tickets: Ticket[]; updatedAt: string }
+  | { kind: 'ready'; clinic: Clinic; tickets: Ticket[]; events: QueueEvent[]; updatedAt: string }
 
-const ALL = STATUS_FILTERS[0].statuses
+// Every status, so the log can name a ticket even after it was cancelled. The filters choose what is shown.
+const ALL: TicketStatus[] = ['waiting', 'notified', 'arrived', 'called', 'seen', 'no_show', 'cancelled']
 
 /** Loads the clinic and its queue, and refreshes every `refreshMs`. Keeps the last good list if a refresh fails. */
 export function useQueue(api: TwenApi = defaultApi, refreshMs = 15_000) {
   const [state, setState] = useState<QueueState>({ kind: 'loading' })
   const [refreshError, setRefreshError] = useState(false)
   const latest = useRef(0)
+  // The log only grows, so after the first load ask only for events newer than the last one we have.
+  const events = useRef<QueueEvent[]>([])
 
   const load = useCallback(async () => {
     const call = ++latest.current
     try {
-      const [clinic, queue] = await Promise.all([api.getClinic(CLINIC_ID), api.getQueue(CLINIC_ID, ALL)])
+      const lastSeq = events.current.at(-1)?.seq
+      const [clinic, queue, fresh] = await Promise.all([
+        api.getClinic(CLINIC_ID),
+        api.getQueue(CLINIC_ID, ALL),
+        api.listEvents(CLINIC_ID, lastSeq),
+      ])
       if (call !== latest.current) return // an older request finished late; ignore it
-      setState({ kind: 'ready', clinic, tickets: queue.tickets, updatedAt: queue.generatedAt })
+      // Skip any event we already hold, in case two refreshes overlapped.
+      const top = events.current.at(-1)?.seq ?? -Infinity
+      events.current = [...events.current, ...fresh.filter((e) => e.seq > top)]
+      setState({ kind: 'ready', clinic, tickets: queue.tickets, events: events.current, updatedAt: queue.generatedAt })
       setRefreshError(false)
     } catch (e) {
       if (call !== latest.current) return
