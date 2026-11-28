@@ -31,7 +31,7 @@ The API treats a phone number typed on the web as unverified:
 
 - Someone can still join with another person's number or add fake tickets. Rate limits (#59) slow this down, and staff can cancel.
 - The same rule covers desk tickets, so `createTicket` can now return 409 for a phone that is already in the queue.
-- **Accepted risk:** even the silent 409 tells someone who types a number that this phone is in today's queue at this clinic. That is a small health-related leak. We accept it for the demo, because the reply names no ticket and the rate limits slow down guessing. It is raised on #11 for the risk register.
+- **Accepted risk:** even the silent 409 tells someone who types a number that this phone is in today's queue at this clinic. That is a small health-related leak. We accept it for the demo, because the reply names no ticket and the rate limits slow down guessing. It also belongs on the risk register (#11).
 - The daily cap means a flood of fake joins can close the web join for the rest of the day. USSD and the desk still work.
 - The paper should say plainly that web phone numbers are not verified.
 
