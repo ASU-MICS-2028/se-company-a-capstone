@@ -1,0 +1,18 @@
+# Local PostgreSQL 16 with the same user, password and database as CI (.github/workflows/code.yml),
+# so DATABASE_URL=postgresql://postgres:postgres@localhost:5432/twen_test works in both places.
+# Start: docker compose up -d --wait    Stop and delete the data: docker compose down -v
+name: twen
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: twen_test
+    ports:
+      # If another PostgreSQL already uses 5432 on your machine, run with TWEN_DB_PORT=5433 (see README).
+      - "${TWEN_DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
