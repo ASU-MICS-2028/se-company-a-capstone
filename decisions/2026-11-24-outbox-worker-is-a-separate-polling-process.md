@@ -16,10 +16,11 @@ The "come now" SMS goes through an outbox table ([transactional outbox](../knowl
 ## Decision
 
 - The worker is a **separate process** running the same code base (`python -m app.worker`), next to the API.
-- It **polls** the outbox every 1 to 2 seconds. It takes due rows with `SELECT ... FOR UPDATE SKIP LOCKED`, sends each through the SMS port, marks it sent, and commits. Two workers can run at once without taking the same row.
+- **The worker also queues the message.** When a waiting ticket's turn nears, the worker moves it `waiting → notified`, inserts its outbox row and appends the `notified` event, all in one transaction. The API never decides when to text; it records joins and staff moves.
+- It **polls** the outbox every 1 to 2 seconds. It takes due rows with `SELECT ... FOR NO KEY UPDATE SKIP LOCKED`, sends each through the SMS port, marks it sent, and commits. Two workers can run at once without taking the same row. This is the same lock mode as `call-next` ([stack decision](2026-11-24-backend-stack-sync-fastapi-and-postgres.md)), so the code uses one lock mode everywhere.
 - Failed sends are **retried with backoff**: each row keeps its attempt count and the time of its next try.
 - Each message carries an **idempotency key** (`ticketId + eventType + seq`, from the proposal), and the table has a unique constraint on it, so a duplicate row can never be created.
-- **What we can and cannot promise.** If the worker crashes after the provider accepts a message but before our commit, it may send that message again. The duplicate window is only that moment. The paper reports it as at least once delivery with a narrow window, and the fault-injection test (a Should) measures it.
+- **What we can and cannot promise.** A message can go out twice in two cases. The worker crashes after the provider accepts it but before our commit. Or the call to the provider times out, so we can't tell whether it was sent, and the retry sends it again. The timeout is the likelier case, since networks fail more often than our process does. So the paper claims at least once delivery, never exactly once, and the fault-injection test (a Should) measures how often a duplicate happens.
 
 ## Options we rejected
 

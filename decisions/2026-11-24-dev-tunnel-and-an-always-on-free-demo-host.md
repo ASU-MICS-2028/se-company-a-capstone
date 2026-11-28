@@ -20,8 +20,8 @@ ai_used: yes
 ## Decision
 
 - **Development:** an **ngrok** tunnel on the free plan. Each free account gets one fixed dev domain, so we register the callback URL with the Africa's Talking sandbox once. Only Africa's Talking callbacks go through the tunnel; the board and patient page run on localhost, because the free plan allows 20,000 HTTP requests a month and the board polls.
-- **Demo host:** an **Oracle Cloud Always Free** Arm virtual machine (shape `VM.Standard.A1.Flex`) running our Docker Compose file: the API, the outbox worker and PostgreSQL 16 on one machine. A VM does not sleep, the Always Free allowance has no end date, and it is far larger than we need (2 OCPUs and 12 GB of memory, 200 GB of disk, 10 TB a month of outbound data).
-- **HTTPS on the VM:** a reverse proxy in front of the API with a Let's Encrypt certificate for the VM's public IP address. Let's Encrypt made six-day certificates for IP addresses generally available in January 2026, so we need no domain name. A free hostname (DuckDNS or sslip.io) is the second route.
+- **Demo host:** an **Oracle Cloud Always Free** Arm virtual machine (shape `VM.Standard.A1.Flex`) running our Docker Compose file on one machine: a Caddy reverse proxy that also serves the built staff board and patient page, the API, the outbox worker and PostgreSQL 16. PostgreSQL is reachable only on the Compose network: it publishes no port on the VM, and the firewall opens only SSH, 80 and 443. A VM does not sleep, the Always Free allowance has no end date, and it is far larger than we need (2 OCPUs and 12 GB of memory, 200 GB of disk, 10 TB a month of outbound data).
+- **HTTPS on the VM:** Caddy in front of the API with a Let's Encrypt certificate for the VM's public IP address. Let's Encrypt made six-day certificates for IP addresses generally available in January 2026, so we need no domain name. A six-day certificate must renew without a person, so renewal is automatic: Caddy renews its own certificates, and if it can't for an IP address, certbot on a timer does it. A free hostname (DuckDNS or sslip.io) is the second route.
 - **Fallback:** if nobody on the team can open an Oracle account by 30 Nov (the card is refused, or there is no Arm capacity), use **Azure for Students**: a small Linux VM paid from the $100 student credit, running the same Compose file. It needs a school email and no card, so it covers Oracle's main risk.
 - **Database:** no hosted database while the VM runs PostgreSQL. If the fallback VM is too small for it, use Supabase's free database through its IPv4 pooler, as a plain PostgreSQL server only. Not Neon (see the evidence).
 
@@ -63,7 +63,7 @@ Sources, all checked 27 Nov 2026:
 - **Whether a quiet demo counts as idle.** Keeping memory above 20% should prevent it, because the rule needs all three under 20%. That is our reading of the rule, not something we've tested.
 - **Azure for Students:** whether an Ashesi email passes verification, and whether its 750 free VM hours are per month.
 - **Ghanaian USSD timeouts.** Africa's Talking publishes Kenyan and Nigerian figures, not Ghanaian ones, so we design to the 10 s rule in its docs.
-- **Free hostnames:** the sslip.io and DuckDNS pages would not load, so that route is unchecked. We also haven't tried issuing the IP certificate yet.
+- **Free hostnames:** the sslip.io and DuckDNS pages would not load, so that route is unchecked. We also haven't tried issuing the IP certificate yet, or checked that Caddy renews an IP certificate by itself.
 - **HTTPS for callbacks:** Africa's Talking asks for a valid, reachable URL and does not say whether it must be HTTPS.
 - **AWS's free plan** (up to $200 in credits for 6 months, and most new customers need no payment method) is a second no-card option, not checked in depth.
 
@@ -81,7 +81,7 @@ Sources, all checked 27 Nov 2026:
 ## Consequences
 
 - One teammate tries to open the Oracle account **before 30 Nov**. Oracle allows one free account per person, so the account belongs to that teammate. If it fails, we switch to the Azure fallback the same day.
-- #49's Compose file runs unchanged on the VM. The Arm shape needs an `arm64` build of every image, which #49 checks.
+- The demo needs its own Compose file with Caddy, the built frontend and no published database port. #49's development file publishes PostgreSQL on a local port, so it is not the demo file. The Arm shape needs an `arm64` build of every image.
 - Size the Arm VM small (for example 1 OCPU and 4 GB), so normal use stays above 20% of memory, and check the memory metric within the first two days, well inside Oracle's 7-day window.
 - Someone logs in to the Oracle console at least monthly: the FAQ says accounts idle for 30 days or more may be treated as abandoned.
 - In development, only Africa's Talking callbacks use the tunnel, which keeps us under ngrok's monthly request limit.

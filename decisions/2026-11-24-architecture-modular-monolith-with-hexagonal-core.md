@@ -21,7 +21,7 @@ We combine four styles, each where it pays off:
 |---|---|---|
 | Deployment | **Modular monolith** | One FastAPI app and one PostgreSQL database, with modules for `queue`, `notify`, `predict` and `gateway` ([note](../knowledge/start-with-a-modular-monolith.md)). The worker runs the same code as a second process. |
 | Inside the app | **Hexagonal core** (ports and adapters) | The queue rules import no vendor library. Ports exist only where we really swap things: **SMS** (Africa's Talking, or a fake for tests and the demo) and the **predictor** (naive, M/M/c, the learned model). The USSD callback is an inbound adapter that turns the provider's format into core commands ([note](../knowledge/hexagonal-architecture-ports-and-adapters.md)). |
-| Notifications | **Event-driven, through a transactional outbox** | A ticket change and its "send SMS" row commit together; a worker sends later. Delivery is at least once, with an idempotent consumer ([outbox](../knowledge/transactional-outbox.md), [idempotent consumers](../knowledge/event-driven-consumers-must-be-idempotent.md)). |
+| Notifications | **Event-driven, through a transactional outbox** | The worker moves a ticket to `notified` and adds its "send SMS" row in one transaction, then sends the message in a later step ([worker decision](2026-11-24-outbox-worker-is-a-separate-polling-process.md)). Delivery is at least once, with an idempotent consumer ([outbox](../knowledge/transactional-outbox.md), [idempotent consumers](../knowledge/event-driven-consumers-must-be-idempotent.md)). |
 | Staff board | **Client-server, polling the event log** | The board polls `/events?after=`. Later (a Should), the same log and the repeat-safe writes become the offline sync channel. |
 
 **No database port.** We will never swap PostgreSQL, and CI tests against a real one, so the core uses a plain data module instead of an interface. This is a deliberate change from #45's first wording, following the lecture note's advice not to add ports for things we will never swap.
@@ -46,7 +46,7 @@ The trade-off, by what each style optimises and what it would cost us to run:
 
 - The C4 diagrams (#48) show these four styles at levels 2 and 3.
 - #49 creates the module folders. #51 builds the predictor port ([interface](../docs/architecture/predictor-interface.md), #46). #52 builds the SMS port with a fake adapter.
-- We trade strong consistency for queue availability, as the proposal says: the board is the single writer for its clinic's queue.
+- We trade strong consistency for queue availability, as the proposal says. Every write (staff moves, USSD and web joins, the worker) goes through our backend into one PostgreSQL database, and row locks serialise writes that touch the same ticket.
 
 ## AI use
 

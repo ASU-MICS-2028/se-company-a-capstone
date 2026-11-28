@@ -36,6 +36,7 @@ Four new decision files, all marked proposed until the team agrees:
 |---|---|---|---|
 | The four decision files | Claude Code | Drafted them from Eric's stack review notes, the proposal and the lecture notes; suggested the hosting candidates | not yet checked |
 | The hosting choice and its evidence (27 Nov) | Claude Code | Checked each hosting candidate against its official pages (fetch agents for most, a browser for the pages they couldn't read), named Oracle Cloud Always Free with Azure for Students as the fallback, and listed what it could not verify. It opened no accounts | not yet checked |
+| Review fixes (28 Nov) | Claude Code | Applied Joseph's review of #57: the worker queues the SMS and moves the ticket to `notified` in one transaction; one lock mode (`FOR NO KEY UPDATE SKIP LOCKED`); duplicates from a crash or a timed-out send; every write goes through the backend, serialised by row locks; Caddy with automatic renewal, the frontend served by Caddy, and PostgreSQL on the Compose network only | not yet checked |
 
 ## How to check it
 
