@@ -1,0 +1,13 @@
+.start {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+.wordmark {
+  margin: 0 0 8px;
+  font-family: var(--font-logo);
+  font-weight: 400;
+  font-size: 48px;
+  line-height: 1;
+}
