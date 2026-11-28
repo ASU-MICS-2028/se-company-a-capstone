@@ -27,8 +27,15 @@ ai_used: yes
 - **Grace window:** a new clinic's `graceMinutes` starts at 20.
 - **Health:** the 503 now has a body (`database: down`), matching what the backend scaffold returns (#49, PR #65).
 - **Lint:** no warnings. Two deliberate ignores, each with its reason, in `.redocly.lint-ignore.yaml`.
+- **From Joseph's review and the survey (#69), 28 Nov:**
+  - Override reasons are a fixed list: `pregnant`, `older_person`, `disability`, `emergency`, `correction`. `correction` needs a note.
+  - A new `POST /tickets/{ticketId}/recall` takes a patient who missed their call back to `arrived`, behind everyone who is there now. New event type `recalled`.
+  - `PublicTicket` carries `travelBand`, so the patient page can say when to leave.
+  - The web join takes Ghana numbers only (`+233` and nine digits). The masking rule and the rate-limit keys are written down.
+  - The desk 409 names the existing ticket (`ticketId`, `code`). The web 409 still says nothing.
+  - A web ticket's page returns 404 from midnight after its day.
 
-Also three decisions (arrival before calling; freezing at v0.2; web phone numbers are unverified) and one learning (the GSM alphabet).
+Also four decisions (arrival before calling; freezing at v0.2; web phone numbers are unverified; fixed priority reasons and recall) and one learning (the GSM alphabet).
 
 ## Why
 
@@ -48,6 +55,7 @@ Eric's review of #43 found that the draft would call patients who are still trav
 | v0.2 edits to `openapi.yaml` | Claude Code | Applied Eric's review points, wrote the state table, hold window, SMS mapping and repeat rules, and ran Redocly | not yet checked |
 | Web booking endpoints | Claude Code | Wrote both endpoints from Joseph's outline. Chose: a 409 that reveals nothing about the existing ticket, `Idempotency-Key` on the join, 404 for non-web ids on the public read, rate limits kept out of the contract, and the one-ticket-per-phone rule across channels (so the desk endpoint can now return 409) | not yet checked |
 | Decision and learning files | Claude Code | Drafted them from Eric's review notes and the proposal | not yet checked |
+| Review changes (28 Nov) | Claude Code | Applied Joseph's review of #55: reason list, recall move and where a recalled ticket lands, `travelBand`, Ghana-only web phones, masking rule, rate-limit keys, desk 409 with the ticket id, 404 after the day. Checked the new rules with a schema validator (16 cases) | not yet checked |
 
 ## How to check it
 
